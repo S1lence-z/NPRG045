@@ -12,4 +12,4 @@ This is an API to connect to a local COM port via a browser
  - TypeScript
  - React + Reactstrap (frontend)
  - Python (backend)
- - more?
+ - ...
