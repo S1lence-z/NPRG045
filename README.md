@@ -11,5 +11,4 @@ This is an API to connect to a local COM port via a browser
 ## Tech Stack
  - TypeScript
  - React + Reactstrap (frontend)
- - Python (backend)
- - ...
+ - Python + Django (backend)
