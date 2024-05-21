@@ -10,7 +10,7 @@ This project aims to develop a web application that communicates with a sensor c
 - Logging results into a database
 - Reviewing logged measurements
 
-[Detailed Project Specification](./docs/program_specification.md)
+[Detailed Project Specification in Czech](./docs/program_specification.md)
 
 ## Technologies Used
 
