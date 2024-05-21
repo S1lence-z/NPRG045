@@ -1,14 +1,40 @@
-# NPRG045
+# Annual Project (NPRG045)
+## Web Application for Sensor Communication
 
-## Task overview
-The app should be able to connect to a local COM port, find the sensor, flash it and get some data out of it (in the first phase).
-In the second phase, the data should be shown in a nicer format and analyzed in a way.
+### Project Overview
 
-This is an API to connect to a local COM port via a browser
- - https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API
- - https://blog.yaakov.online/accessing-com-ports-from-a-web-page/
+This project aims to develop a web application that communicates with a sensor connected via a COM port. The application allows users to perform measurements (e.g., distance) and log results into a database. Key features include:
 
-## Tech Stack
- - TypeScript
- - React + Reactstrap (frontend)
- - Python + Django (backend)
+- Connecting to a sensor via a COM port
+- Real-time display of measured data
+- Logging results into a database
+- Reviewing logged measurements
+
+[Detailed Project Specification](./docs/program_specification.md)
+
+## Technologies Used
+
+### Frontend
+- Vite + React
+- TypeScript
+- Reactstrap
+
+### Backend
+- Python
+- Django
+- SQLite3 (upgradeable to MySQL)
+- Neural Network for future data processing
+
+### Communication Protocols
+
+- **REST API:** For frontend-backend communication, primarily for accessing logs.
+- **Web Serial API:** For connecting the frontend to the sensor via the COM port.
+- **MQTT:** For bidirectional communication between the sensor and the application.
+
+## Installation TBD
+
+## Usage TBD
+
+## Contact
+
+For any questions or feedback, please contact [j3.zelenka@gmail.com](mailto:j3.zelenka@gmail.com).
