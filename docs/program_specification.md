@@ -4,7 +4,7 @@
 Cílem projektu je vytvořit webovou aplikaci, která bude schopna komunikovat se senzorem připojeným přes COM port. Aplikace umožní uživateli provádět měření (např. vzdálenosti) a logovat výsledky do databáze. Hlavními funkcemi aplikace budou:
 
 - Připojení k senzoru přes COM port
-- Měření vzdálenosti a dalších parametrů (DALŠÍ FÁZE)
+- Měření vzdálenosti a dalších parametrů
 - Zobrazení naměřených dat v reálném čase
 - Logování výsledků do databáze a možnost jejich zpětného prohlížení
 
