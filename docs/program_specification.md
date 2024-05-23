@@ -45,7 +45,6 @@ Frontend bude komunikovat s backendem pomocí Axios API calls. Velká část kom
 ## Prozatímní návrh fungování aplikace
 - Aplikace se připojí k vybranému COM portu
 - V první fázi bude senzor měřit vzdálenost
-- Uživatel se připojí k zařízení a na další stránce si vybere z různých možností měření (vzdálenost, presence apod.)
 - Začátek měření vzdálenosti:
   - Měření začne a hodnoty se budou logovat do databáze
   - V reálném čase se bude zobrazovat graf naměřených hodnot
