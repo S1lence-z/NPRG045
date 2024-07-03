@@ -1,2 +1,5 @@
 # Ignore my python virtual environment
 python_env
+
+# Ignore my vscode custom settings folder
+.vscode
