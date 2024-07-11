@@ -28,8 +28,8 @@ This project aims to develop a web application that communicates with a sensor c
 ### Communication Protocols
 
 - **REST API:** For frontend-backend communication, primarily for accessing logs.
-- **Web Serial API:** For connecting the frontend to the sensor via the COM port.
-- **MQTT:** For bidirectional communication between the sensor and the application.
+- **PySerial:** For connecting the backend to the sensor via the COM port.
+- **Web Socket:** For bidirectional communication between the backens and the frontend.
 
 ## Installation TBD
 
