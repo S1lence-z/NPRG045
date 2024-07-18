@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'channels',
     'ws_app',
     'daphne',
+    'rest_framework',
+    'api',
+    'sensors',
     
     'django.contrib.admin',
     'django.contrib.auth',
