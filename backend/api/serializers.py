@@ -6,4 +6,4 @@ from sensors.models import Sensor
 class SensorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sensor
-        fields = ['id', 'port_name', 'hwid', 'port_description']
+        fields = ['id', 'port_name', 'hwid', 'port_description', 'is_active']
