@@ -6,7 +6,7 @@ def get_serial_ports() -> list['PortInformation']:
     Returns a list of available serial ports.
 
     Returns:
-        list: A list of ListPortInfo objects.
+        list[PortInformation]: A list of PortInformation objects representing the available serial ports.
     """
     return [PortInformation(port) for port in serial.tools.list_ports.comports()]
 
@@ -43,7 +43,7 @@ class PortInformation:
         self.port = port
         self.name = port.device
         self.description = port.description
-        self.hwid = port.hwid
+        self.device_hwid = port.hwid
 
     def __str__(self):
-        return f'{self.name} - {self.hwid}'
+        return f'{self.name} - {self.device_hwid}'

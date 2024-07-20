@@ -11,7 +11,7 @@ class Command(BaseCommand):
         for port in enhanced_ports:
             sensor, created = Sensor.objects.get_or_create(
                 port_name=port.name,
-                hwid=port.hwid,
+                hwid=port.device_hwid,
                 port_description=port.description
             )
             if created:
