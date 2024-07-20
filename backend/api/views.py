@@ -22,7 +22,7 @@ class PortsView(APIView):
             sensor = sensor.first()
             sensor.is_connected = True
             sensor.save()
-            return Response({'message': f'Known sensor on port {port_name} conncted'}, status=status.HTTP_200_OK)
+            return Response({'message': f'Known sensor on port {port_name} connected'}, status=status.HTTP_200_OK)
         else:
             ports = get_serial_ports()
             for port in ports:
@@ -57,7 +57,10 @@ class SensorViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['patch'])
     def change_connection_status(self, request, pk):
-        sensor = Sensor.objects.get(pk=pk)
-        sensor.is_connected = not sensor.is_connected
-        sensor.save()
-        return Response({'message': f'Sensor on port {sensor.port_name} is now {"active" if sensor.is_connected else "inactive"}'}, status=status.HTTP_200_OK)
+        try:
+            sensor = Sensor.objects.get(pk=pk)
+            sensor.is_connected = not sensor.is_connected
+            sensor.save()
+            return Response({'message': f'Sensor on port {sensor.port_name} is now {"active" if sensor.is_connected else "inactive"}'}, status=status.HTTP_200_OK)
+        except Sensor.DoesNotExist:
+            return Response({'message': 'Sensor not found'}, status=status.HTTP_404_NOT_FOUND)
