@@ -46,4 +46,7 @@ class PortInformation:
         self.device_hwid = port.hwid
 
     def __str__(self):
-        return f'{self.name} - {self.device_hwid}'
+        return f'PortInformation(name={self.name}, device_hwid={self.device_hwid})'
+    
+    def __repr__(self):
+        return str(self)
