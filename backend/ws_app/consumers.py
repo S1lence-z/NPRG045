@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 from channels.generic.websocket import WebsocketConsumer
+from asgiref.sync import async_to_sync
 
 class MessageType(Enum):
     CONNECTION_ESTABLISHED = "connection_established"
@@ -9,7 +10,12 @@ class MessageType(Enum):
 
 class WebSocketConsumer(WebsocketConsumer):
     def connect(self):
-        super().connect()
+        self.accept()
+        # Join a group for notifying the user of port changes
+        async_to_sync(self.channel_layer.group_add)(
+            'port_updates', 
+            self.channel_name
+        )
         self.send(text_data=json.dumps({
             'type': MessageType.CONNECTION_ESTABLISHED.value,
             'message': 'Connection established with the server.'
@@ -17,6 +23,11 @@ class WebSocketConsumer(WebsocketConsumer):
     
     def disconnect(self, close_code):
         print(f'Connection closed. Close code: {close_code}')
+        # Leave the group for notifying the user of port changes
+        async_to_sync(self.channel_layer.group_discard)(
+            'port_updates', 
+            self.channel_name
+        )
         self.send(text_data=json.dumps({
             'type': MessageType.CONNECTION_CLOSED.value,
             'message': 'Connection closed with the server.'
@@ -26,3 +37,14 @@ class WebSocketConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
         request_type = text_data_json['type']
         request_content = text_data_json['message']
+        self.send(text_data=json.dumps({
+            'type': request_type,
+            'message': f'You said: {request_content}'
+        }))
+    
+    def notify_of_port_change(self, event):
+        event_message = event['message']
+        self.send(text_data=json.dumps({
+            'type': MessageType.PORT_CHANGE.value,
+            'message': f'{event_message}'
+        }))
