@@ -1,13 +1,25 @@
 from django.urls import path
 from . import views
 
-urlpatterns = [
+_ports_urlpatterns = [
     ### PORTS
-    path('ports/', views.PortsView.as_view(), name='available-sensors'),
-    path('ports/<str:port_name>', views.PortsView.as_view(), name='connect-sensor'),
-    ### SENSORS
-    path('sensors/', views.SensorViewSet.as_view({'get': 'list'}), name='list-sensors'),
-    path('sensors/<int:pk>', views.SensorViewSet.as_view({'patch': 'change_connection_status'}), name='update-sensor-status'),
-    path('sensors/<int:pk>', views.SensorViewSet.as_view({'delete': 'delete'}), name='delete-sensor'),
-    path('sensors/connected/', views.SensorViewSet.as_view({'get': 'get_connected'}), name='get-connected-sensors'),
+    #! port is not a model, they are retrieved from by a function
+    path('ports/', views.PortsAPIView.as_view(), name='available-sensors'),
 ]
+
+_sensors_urlpatterns = [
+    ### SENSORS
+    path('sensors/', views.SensorListCreateAPIView.as_view(), name='list-create-sensors'), 
+    path('sensors/<int:pk>', views.SensorDetailAPIView.as_view(), name='update-delete-sensor'),
+    path('sensors/connected/', views.SensorConnectedAPIView.as_view(), name='list-connected-sensors'),
+]
+
+_distance_profile_urlpatterns = [
+    ### PROFILE MANAGEMENT FOR THE DISTANCE DETECTOR
+    path('profiles/distance/', views.DistanceProfileListCreateAPIView.as_view(), name='list-create-profiles'),
+    path('profiles/distance/<int:pk>', views.DistanceProfileDetailAPIView.as_view(), name='retrieve-update-delete-profile'),
+]
+
+urlpatterns = _ports_urlpatterns + _sensors_urlpatterns + _distance_profile_urlpatterns
+#! DO NOT PUT DATA IN HERE! Data is gonna be handled using websockets
+#? probably more endpoints for profiles for other sensor apps (motion, presence, etc.)
