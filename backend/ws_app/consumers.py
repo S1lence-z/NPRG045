@@ -13,7 +13,7 @@ class WebSocketConsumer(WebsocketConsumer):
         self.accept()
         # Join a group for notifying the user of port changes
         async_to_sync(self.channel_layer.group_add)(
-            'port_updates', 
+            'sensor_updates', 
             self.channel_name
         )
         self.send(text_data=json.dumps({
@@ -25,7 +25,7 @@ class WebSocketConsumer(WebsocketConsumer):
         print(f'Connection closed. Close code: {close_code}')
         # Leave the group for notifying the user of port changes
         async_to_sync(self.channel_layer.group_discard)(
-            'port_updates', 
+            'sensor_updates', 
             self.channel_name
         )
         self.send(text_data=json.dumps({
