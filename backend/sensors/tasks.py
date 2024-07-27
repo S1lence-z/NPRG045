@@ -4,7 +4,7 @@ from django.core.cache import cache
 import json
 from .models import Sensor
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import async_to_sync
 
 REDIS_KEY = 'previous_port_names'
 
