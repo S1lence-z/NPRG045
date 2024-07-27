@@ -3,7 +3,7 @@ from . import views
 
 _ports_urlpatterns = [
     ### PORTS
-    #! port is not a model, they are retrieved from by a function
+    #! port is not a model, they are retrieved by a function
     path('ports/', views.PortsAPIView.as_view(), name='available-sensors'),
 ]
 
@@ -20,6 +20,13 @@ _distance_profile_urlpatterns = [
     path('profiles/distance/<int:pk>', views.DistanceProfileDetailAPIView.as_view(), name='retrieve-update-delete-profile'),
 ]
 
-urlpatterns = _ports_urlpatterns + _sensors_urlpatterns + _distance_profile_urlpatterns
-#! DO NOT PUT DATA IN HERE! Data is gonna be handled using websockets
+_measurement_urlpatterns = [
+    ### DATA RETRIEVAL START/STOP
+    path('measurements/distance/<int:pk>/start', views.DistanceMeasurementStartAPIView.as_view(), name='start-distance-measurement'),
+    path('measurements/distance/<int:pk>/stop', views.DistanceMeasurementStopAPIView.as_view(), name='stop-distance-measurement'),
+]
+
+urlpatterns = _ports_urlpatterns + _sensors_urlpatterns + _distance_profile_urlpatterns + _measurement_urlpatterns
+
+#! DO NOT PUT DATA STREAMING IN HERE! Data is gonna be handled using websockets
 #? probably more endpoints for profiles for other sensor apps (motion, presence, etc.)
