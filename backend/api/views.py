@@ -52,7 +52,7 @@ class SensorListCreateAPIView(APIView):
             'sensor': serializer.data}, status=status.HTTP_201_CREATED)
         
 class SensorDetailAPIView(APIView):
-    def _update_sensor_manager(sensor, is_connected) -> None:
+    def _update_sensor_manager(self, sensor, is_connected) -> None:
         if not is_connected: 
             SensorClientManager.get_instance().remove_sensor_client(sensor)
     
