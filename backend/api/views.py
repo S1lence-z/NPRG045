@@ -138,22 +138,22 @@ class DistanceProfileDetailAPIView(APIView):
             return Response({'message': f'Profile with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
         
 class DistanceMeasurementStartAPIView(APIView):
-    def _get_default_distance_profile(self, requested_distance_profile_id: int) -> DistanceProfile:
-        print(f'Distance profile with id {requested_distance_profile_id} not found. Using default.')
-        return DistanceProfile.objects.first()
+    def _get_distance_profile(self, requested_distance_profile_id: int) -> DistanceProfile:
+        try:
+            distance_profile = DistanceProfile.objects.get(pk=requested_distance_profile_id)
+            return distance_profile
+        except DistanceProfile.DoesNotExist:
+            print(f'Distance profile with id {requested_distance_profile_id} not found. Using default profile.')
+            return DistanceProfile.objects.first()
     
     def post(self, request, pk):
         requested_distance_profile_id = request.data.get('distance_profile_id')
+        distance_profile = self._get_distance_profile(requested_distance_profile_id)
         try:
             sensor = Sensor.objects.get(pk=pk)
-            distance_profile = DistanceProfile.objects.get(pk=requested_distance_profile_id)
         except Sensor.DoesNotExist:
             return Response({'message': f'Sensor with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
-        except DistanceProfile.DoesNotExist:
-            distance_profile = None
-            
-        if distance_profile is None:
-            distance_profile = self._get_default_distance_profile(requested_distance_profile_id)
+
         SensorClientManager.get_instance().start_distance_detector(sensor, distance_profile)
         return Response({
             'message': f'Distance measurement started for sensor with id {pk}',

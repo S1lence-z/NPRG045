@@ -10,5 +10,4 @@ class SensorsConfig(AppConfig):
         print('SensorClientManager singleton created')
 
     def ready(self):
-        import sensors.signals
         self._instantiate_sensor_client_manager()

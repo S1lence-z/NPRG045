@@ -1,10 +1,14 @@
-import acconeer.exptool.a121 as et
 from acconeer.exptool import a121
-from acconeer.exptool.a121.algo.distance import Detector, DetectorConfig, ThresholdMethod
+from acconeer.exptool.a121.algo.distance import Detector, DetectorConfig, ThresholdMethod, DetectorResult
 from acconeer.exptool.a121.algo import PeakSortingMethod, ReflectorShape
 from abc import ABC, abstractmethod
 from sensors.models import Sensor, DistanceProfile
 from .sensor_client import SensorClient
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from api.serializers import SensorSerializer
+from sensors.detector_serializers import DetectorResultEncoder
+import json
 
 class SensorAppProvider(ABC):
     """
@@ -31,9 +35,8 @@ class SensorClientManager(SensorAppProvider):
         _distance_detector_instances (dict[SensorClient, Detector]): A dictionary of distance detector instances with the sensor client as the key.
 
     Methods:
-        add_sensor: Adds a sensor client instance to the manager.
-        get_sensor_client: Retrieves a sensor client instance based on the sensor.
-        remove_sensor: Removes a sensor client instance based on the sensor.
+        add_sensor_client: Adds a sensor client instance to the manager.
+        remove_sensor_client: Removes a sensor client instance based on the sensor.
         start_distance_detector: Retrieves a distance detector for a sensor with the specified configuration.
         stop_distance_detector: Stops the distance detector for a sensor.
     """
@@ -46,9 +49,10 @@ class SensorClientManager(SensorAppProvider):
         raise RuntimeError('Use get_instance() to get the singleton instance.')
     
     @classmethod
-    def get_instance(cls):
+    def get_instance(cls) -> 'SensorClientManager':
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
+            cls._instance_exists = True
         return cls._instance
     
     def __del__(self):
@@ -72,9 +76,31 @@ class SensorClientManager(SensorAppProvider):
             SensorClient: The sensor client instance.
 
         Raises:
-            None
+            ValueError: If no sensor client instance is found for the specified sensor.
         """
-        return self._sensor_client_instances.get(sensor)
+        sensor_client_instance = self._sensor_client_instances.get(sensor)
+        if sensor_client_instance is None:
+            raise ValueError(f'No sensor client instance found for sensor: {sensor}. Is it connected?')
+        return sensor_client_instance
+    
+    def _get_distance_detector(self, sensor: Sensor) -> Detector:
+        """
+        Retrieves a distance detector based on the sensor.
+
+        Args:
+            sensor (Sensor): The sensor.
+
+        Returns:
+            Detector: The distance detector.
+
+        Raises:
+            ValueError: If no distance detector instance is found for the specified sensor.
+        """
+        sensor_client = self._get_sensor_client(sensor)
+        distance_detector_instance = self._distance_detector_instances.get(sensor_client)
+        if distance_detector_instance is None:
+            raise ValueError(f'No distance detector instance found for sensor: {sensor}. Is it started?')
+        return distance_detector_instance
     
     def _convert_to_detector_config(self, distance_profile_model: DistanceProfile) -> DetectorConfig:
         """
@@ -108,6 +134,30 @@ class SensorClientManager(SensorAppProvider):
             threshold_sensitivity=distance_profile_model.threshold_sensitivity,
             update_rate=distance_profile_model.update_rate
         )
+        
+    def send_distance_data_to_frontend(self, sensor: Sensor, detector_result: dict[int, DetectorResult]):
+        """
+        Sends distance data from a sensor to the frontend.
+
+        Args:
+            sensor (Sensor): The sensor object.
+            detector_result (dict[int, DetectorResult]): The detector result data.
+
+        Returns:
+            None
+        """
+        channel_layer = get_channel_layer()
+        sensor_info = SensorSerializer(sensor).data
+        sensor_data = json.loads(json.dumps(detector_result, cls=DetectorResultEncoder))
+        async_to_sync(channel_layer.group_send)(
+            'sensor_updates',
+            {
+                'type': 'send_distance_data',
+                'message': 'New distance data from a sensor',
+                'sensor': sensor_info,
+                'data': sensor_data
+            }
+        )
     
     def add_sensor_client(self, sensor_model: Sensor):
         """
@@ -125,7 +175,6 @@ class SensorClientManager(SensorAppProvider):
             return
         print(f'Sensor instance for port name: {sensor_model.port_name} already exists')
         
-    
     def remove_sensor_client(self, sensor: Sensor):
         """
         Removes a sensor client instance based on the sensor.
@@ -151,37 +200,34 @@ class SensorClientManager(SensorAppProvider):
                 Defaults to None.
 
         Returns:
-            Detector: The distance detector.
+            Boolean: True if the distance detector was successfully started, False otherwise.
 
         Raises:
             ValueError: If no client instance is found for the specified sensor or if the
                 detector configuration is not provided.
-        """        
+        """
+        
+        SENSOR_IDS = [1]
         client_instance = self._get_sensor_client(sensor)
-        if client_instance is None:
-            raise ValueError(f'No client instance found for sensor: {sensor}. Is it connected?')
         distance_profile = self._convert_to_detector_config(distance_profile)
-        
-        
         distance_detector = Detector(
             client=client_instance.client,
-            sensor_ids=[1],
+            sensor_ids=SENSOR_IDS,
             detector_config=distance_profile
         )
-        #! set the distance detector for the client instance
-        client_instance.distance_detector = distance_detector
+        
+        self._distance_detector_instances[client_instance] = distance_detector
         distance_detector.calibrate_detector()
         distance_detector.start()
         print(f'Started distance detector for sensor: {sensor}')
         
-        #! this is how to get data from the detector
-        # while not interrupt_handler.got_signal:
-        # detector_result = detector.get_next()
-        # print(detector_result)
-        # detector.stop()
-        # print("Disconnecting...")
-        # client.close()
-        return distance_detector
+        while distance_detector.started:
+            data = distance_detector.get_next()
+            if data is not None:
+                self.send_distance_data_to_frontend(sensor, data)
+            if not distance_detector.started:
+                del self._distance_detector_instances[client_instance]
+                break
     
     def stop_distance_detector(self, sensor: Sensor):
         """
@@ -194,9 +240,6 @@ class SensorClientManager(SensorAppProvider):
             None
         """
         client_instance = self._get_sensor_client(sensor)
-        if client_instance is None:
-            raise ValueError(f'No client instance found for sensor: {sensor}. Is it connected?')
-        distance_detector = client_instance.distance_detector
+        distance_detector = self._distance_detector_instances.get(client_instance)
         distance_detector.stop()
-        del client_instance.distance_detector
         print(f'Stopped distance detector for sensor: {sensor}')
