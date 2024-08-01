@@ -7,13 +7,14 @@ class MessageType(Enum):
     CONNECTION_ESTABLISHED = "connection_established"
     CONNECTION_CLOSED = "connection_closed"
     PORT_CHANGE = "port_change"
+    DISTANCE_DATA = "distance_data"
 
 class WebSocketConsumer(WebsocketConsumer):
     def connect(self):
         self.accept()
-        # Join a group for notifying the user of port changes
+        # Join a group for notifying the user of any updates related to the sensors
         async_to_sync(self.channel_layer.group_add)(
-            'port_updates', 
+            'sensor_updates', 
             self.channel_name
         )
         self.send(text_data=json.dumps({
@@ -25,7 +26,7 @@ class WebSocketConsumer(WebsocketConsumer):
         print(f'Connection closed. Close code: {close_code}')
         # Leave the group for notifying the user of port changes
         async_to_sync(self.channel_layer.group_discard)(
-            'port_updates', 
+            'sensor_updates', 
             self.channel_name
         )
         self.send(text_data=json.dumps({
@@ -46,5 +47,16 @@ class WebSocketConsumer(WebsocketConsumer):
         event_message = event['message']
         self.send(text_data=json.dumps({
             'type': MessageType.PORT_CHANGE.value,
-            'message': f'{event_message}'
+            'message': event_message
+        }))
+        
+    def send_distance_data(self, event):
+        event_message = event['message']
+        event_sensor = event['sensor']
+        event_data = event['data']
+        self.send(text_data=json.dumps({
+            'type': MessageType.DISTANCE_DATA.value,
+            'message': event_message,
+            'sensor': event_sensor,
+            'data': event_data
         }))

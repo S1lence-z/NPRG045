@@ -16,6 +16,14 @@ class Sensor(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+        
+    def __hash__(self) -> int:
+        return hash(self.port_name)
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Sensor):
+            return False
+        return self.port_name == other.port_name
     
     def __str__(self):
         return f"Sensor(port_name={self.port_name}, hwid={self.hwid}, is_connected={self.is_connected})"
@@ -59,7 +67,7 @@ class DistanceProfile(models.Model):
         choices=MAX_PROFILE_CHOICES, 
         default='PROFILE_5'
     )
-    close_range_leakage = models.BooleanField(default=False)
+    close_range_leakage_cancellation = models.BooleanField(default=False)
     signal_quality = models.FloatField(default=15.0)
     threshold_method = models.CharField(
         max_length=20, 

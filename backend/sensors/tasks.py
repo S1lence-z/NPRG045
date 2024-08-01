@@ -4,7 +4,8 @@ from django.core.cache import cache
 import json
 from .models import Sensor
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import async_to_sync
+from .sensor_management.sensor_client_manager import SensorClientManager
 
 REDIS_KEY = 'previous_port_names'
 
@@ -13,7 +14,7 @@ def monitor_serial_ports():
     def _notify_on_port_change():
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            'port_updates',
+            'sensor_updates',
             {
                 'type': 'notify_of_port_change',
                 'message': 'There has been a change in the available ports.'

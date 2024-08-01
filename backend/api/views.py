@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from .serializers import SensorSerializer, PortInformationSerializer, DistanceProfileSerializer
 from sensors.models import Sensor, DistanceProfile
 from sensors.utils import get_serial_ports, filter_ports
+from sensors.sensor_management.sensor_client_manager import SensorClientManager
 
 # Create your views here.
 
@@ -20,6 +21,9 @@ class SensorListCreateAPIView(APIView):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request):
+        def _update_sensor_manager(sensor):
+            SensorClientManager.get_instance().add_sensor_client(sensor)
+        
         requested_port_name = request.data.get('name')
         requested_description = request.data.get('description')
         requested_device_hwid = request.data.get('device_hwid')
@@ -29,43 +33,51 @@ class SensorListCreateAPIView(APIView):
             sensor.is_connected = True
             sensor.save()
             serializer = SensorSerializer(sensor)
+            _update_sensor_manager(sensor)
             return Response(data={
                 'message': f'Known sensor with id {sensor.id} on port {requested_port_name} connected',
                 'sensor': serializer.data}, status=status.HTTP_200_OK)
-        else:
-            sensor = Sensor.objects.create(
-                port_name=requested_port_name, 
-                port_description=requested_description, 
-                hwid=requested_device_hwid, 
-                is_connected=True
-            )
-            sensor.save()
-            serializer = SensorSerializer(sensor)
-            return Response(data={
-                'message': f'New sensor with id {sensor.id} on port {requested_port_name} connected',
-                'sensor': serializer.data}, status=status.HTTP_201_CREATED)
+            
+        sensor = Sensor.objects.create(
+            port_name=requested_port_name, 
+            port_description=requested_description, 
+            hwid=requested_device_hwid, 
+            is_connected=True
+        )
+        sensor.save()
+        serializer = SensorSerializer(sensor)
+        _update_sensor_manager(sensor)
+        return Response(data={
+            'message': f'New sensor with id {sensor.id} on port {requested_port_name} connected',
+            'sensor': serializer.data}, status=status.HTTP_201_CREATED)
         
 class SensorDetailAPIView(APIView):
-    def put(self, request, pk):
+    def _update_sensor_manager(self, sensor, is_connected) -> None:
+        if not is_connected: 
+            SensorClientManager.get_instance().remove_sensor_client(sensor)
+    
+    def put(self, request, pk):        
         try:
             sensor = Sensor.objects.get(pk=pk)
         except Sensor.DoesNotExist:
             return Response({
-                'message': f'Sensor with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
+                'message': f'Sensor with id {pk} was not found'}, status=status.HTTP_404_NOT_FOUND)
             
         serializer = SensorSerializer(sensor, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            self._update_sensor_manager(sensor, sensor.is_connected)
             return Response(data={
-                'message': f'Sensor on port {sensor.port_name} is now {"active" if sensor.is_connected else "inactive"}', 
+                'message': f'Sensor with id {pk} on port {sensor.port_name} updated', 
                 'sensor': serializer.data}, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def delete(self, request, pk):
+    def delete(self, request, pk):        
         try:
             sensor = Sensor.objects.get(pk=pk)
             sensor_name = sensor.port_name
             sensor.delete()
+            self._update_sensor_manager(sensor, sensor.is_connected)
             return Response(data={
                 'message': f'Sensor with id {pk} on port {sensor_name} deleted',
                 }, status=status.HTTP_200_OK)
@@ -89,7 +101,7 @@ class DistanceProfileListCreateAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(data={
-                'message': f'New profile with id {serializer.data['id']} was created',
+                'message': f'New profile with id {serializer.data['id']} created',
                 'profile': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -107,7 +119,7 @@ class DistanceProfileDetailAPIView(APIView):
         try:
             profile = DistanceProfile.objects.get(pk=pk)
         except DistanceProfile.DoesNotExist:
-            return Response({'message': f'Profile with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': f'Distance profile with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = DistanceProfileSerializer(profile, data=request.data)
         if serializer.is_valid():
@@ -124,3 +136,35 @@ class DistanceProfileDetailAPIView(APIView):
             return Response({'message': f'Profile with id {pk} deleted'}, status=status.HTTP_200_OK)
         except DistanceProfile.DoesNotExist:
             return Response({'message': f'Profile with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+class DistanceMeasurementStartAPIView(APIView):
+    def _get_distance_profile(self, requested_distance_profile_id: int) -> DistanceProfile:
+        try:
+            distance_profile = DistanceProfile.objects.get(pk=requested_distance_profile_id)
+            return distance_profile
+        except DistanceProfile.DoesNotExist:
+            print(f'Distance profile with id {requested_distance_profile_id} not found. Using default profile.')
+            return DistanceProfile.objects.first()
+    
+    def post(self, request, pk):
+        requested_distance_profile_id = request.data.get('distance_profile_id')
+        distance_profile = self._get_distance_profile(requested_distance_profile_id)
+        try:
+            sensor = Sensor.objects.get(pk=pk)
+        except Sensor.DoesNotExist:
+            return Response({'message': f'Sensor with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        SensorClientManager.get_instance().start_distance_detector(sensor, distance_profile)
+        return Response({
+            'message': f'Distance measurement started for sensor with id {pk}',
+            'sensor': SensorSerializer(sensor).data,
+        }, status=status.HTTP_200_OK)
+
+class DistanceMeasurementStopAPIView(APIView):
+    def post(self, request, pk):
+        sensor = Sensor.objects.get(pk=pk)
+        SensorClientManager.get_instance().stop_distance_detector(sensor)
+        return Response({
+            'message': f'Distance measurement stopped for sensor with id {pk}',
+            'sensor': SensorSerializer(sensor).data,
+        }, status=status.HTTP_200_OK)
