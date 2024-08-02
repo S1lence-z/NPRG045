@@ -1,0 +1,14 @@
+.home-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 5px;
+}
+
+.sensor-card {
+    background-color: aqua;
+}
+
+.card-strip {
+    background-color: red;
+}
