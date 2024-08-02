@@ -12,12 +12,6 @@ export interface Sensor {
     is_connected: boolean;
 }
 
-export interface ICard<T = any> {
-    id: number;
-    title: string;
-    content: T;
-}
-
 export class SelectOption<T = any> {
     label: string;
     value: T;

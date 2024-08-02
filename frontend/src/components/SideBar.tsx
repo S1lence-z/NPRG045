@@ -16,9 +16,6 @@ const SideBar = () => {
                         <Link to="/">Connect</Link>
                     </NavItem>
                     <NavItem>
-                        <Link to="/setup">Setup</Link>
-                    </NavItem>
-                    <NavItem>
                         <Link to="/distance-tool">Distance Detector</Link>
                     </NavItem>
                 </Nav>

@@ -3,13 +3,15 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "reactstrap";
 import ReactSelect, { GroupBase, SingleValue } from "react-select";
-import { Port, SelectOption } from "../components/Types";
+import { Port, SelectOption, Sensor } from "../components/Types";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import CardStrip from "../components/CardStrip";
+import SensorCard from "../components/SensorCard";
 
 const SelectPort = () => {
     const [selectedPort, setSelectedPort] = useState<SingleValue<SelectOption<Port>> | null>(null);
     const [portOptions, setPortOptions] = useState<readonly (SelectOption<Port> | GroupBase<SelectOption<Port>>)[]>([]);
-    const triggerPortChange = useWebSocket();
+    const portUpdateTrigger = useWebSocket();
 
     const fetchPorts = () => {
         setSelectedPort(null);
@@ -37,14 +39,19 @@ const SelectPort = () => {
             return;
         }
         const postData = selectedPort.value;
-        axios.post("http://127.0.0.1:8000/api/v1/sensors/", postData).then((response) => {
-            console.log("Port connection response: ", response.data);
-        });
+        axios
+            .post("http://127.0.0.1:8000/api/v1/sensors/", postData)
+            .then((response) => {
+                console.log("Port connection response: ", response.data);
+            })
+            .catch((error) => {
+                console.error("There was an error connecting to the port.", error);
+            });
     };
 
     useEffect(() => {
         fetchPorts();
-    }, [triggerPortChange]);
+    }, [portUpdateTrigger]);
 
     return (
         <div>
@@ -61,6 +68,42 @@ const SelectPort = () => {
     );
 };
 
+const KnownSensorsList = () => {
+    const [knownSensors, setKnownSensors] = useState<Sensor[]>([]);
+    const triggerSensorChange = useWebSocket();
+
+    const fetchKnownSensors = () => {
+        axios
+            .get("http://127.0.0.1:8000/api/v1/sensors/")
+            .then((response) => {
+                setKnownSensors(response.data);
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the available sensors.", error);
+            });
+    };
+
+    useEffect(() => {
+        fetchKnownSensors();
+    }, [triggerSensorChange]);
+
+    return (
+        <div>
+            <h3>Known Sensors</h3>
+            <CardStrip
+                cards={knownSensors.map((sensor) => {
+                    return {
+                        id: sensor.id,
+                        title: `Sensor ${sensor.id}`,
+                        content: sensor,
+                    };
+                })}
+                CardComponent={SensorCard}
+            />
+        </div>
+    );
+};
+
 const HomePage = () => {
     return (
         <div className="home-page">
@@ -68,6 +111,7 @@ const HomePage = () => {
             <div className="available-sensor">
                 <p>Available Sensors</p>
                 <SelectPort />
+                <KnownSensorsList />
             </div>
         </div>
     );

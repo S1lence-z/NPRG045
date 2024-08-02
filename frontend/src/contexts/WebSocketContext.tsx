@@ -4,12 +4,14 @@ interface WebSocketContextType {
     socket: WebSocket | null;
     status: boolean;
     portUpdateTrigger: number;
+    sensorUpdateTrigger: number;
 }
 
 enum MessageType {
     CONNECTION_ESTABLISHED = "connection_established",
     CONNECTION_CLOSED = "connection_closed",
     PORT_CHANGE = "port_change",
+    SENSOR_CHANGE = "sensor_change",
     DISTANCE_DATA = "distance_data",
 }
 
@@ -20,6 +22,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [status, setStatus] = useState<boolean>(false);
     const [portUpdateTrigger, setPortUpdateTrigger] = useState<number>(0);
+    const [sensorUpdateTrigger, setSensorUpdateTrigger] = useState<number>(0);
 
     useEffect(() => {
         const ws = new WebSocket(backendUrl);
@@ -38,8 +41,14 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                     console.log("Connection closed");
                     break;
                 case MessageType.PORT_CHANGE:
-                    console.log("Port changed");
-                    setPortUpdateTrigger(prev => prev + 1);
+                    console.log("Port change occured");
+                    setPortUpdateTrigger((prev) => prev + 1);
+                    console.log("Sensor change also could have occured");
+                    setSensorUpdateTrigger((prev) => prev + 1);
+                    break;
+                case MessageType.SENSOR_CHANGE:
+                    console.log("Sensor change occured");
+                    setSensorUpdateTrigger((prev) => prev + 1);
                     break;
                 case MessageType.DISTANCE_DATA:
                     console.log("Distance data received");
@@ -58,7 +67,9 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     }, []);
 
     return (
-        <WebSocketContext.Provider value={{ socket, status, portUpdateTrigger }}>{children}</WebSocketContext.Provider>
+        <WebSocketContext.Provider value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger }}>
+            {children}
+        </WebSocketContext.Provider>
     );
 };
 

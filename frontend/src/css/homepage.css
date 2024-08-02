@@ -6,9 +6,8 @@
 }
 
 .sensor-card {
-    background-color: aqua;
-}
-
-.card-strip {
-    background-color: red;
+    background-color: lightblue;
+    padding: 8px;
+    border-radius: 10px;
+    margin: auto;
 }
