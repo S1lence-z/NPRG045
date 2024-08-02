@@ -5,7 +5,6 @@ import json
 from .models import Sensor
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .sensor_management.sensor_client_manager import SensorClientManager
 
 REDIS_KEY = 'previous_port_names'
 

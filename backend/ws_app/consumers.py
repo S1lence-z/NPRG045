@@ -7,6 +7,7 @@ class MessageType(Enum):
     CONNECTION_ESTABLISHED = "connection_established"
     CONNECTION_CLOSED = "connection_closed"
     PORT_CHANGE = "port_change"
+    SENSOR_CHANGE = "sensor_change"
     DISTANCE_DATA = "distance_data"
 
 class WebSocketConsumer(WebsocketConsumer):
@@ -48,6 +49,15 @@ class WebSocketConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'type': MessageType.PORT_CHANGE.value,
             'message': event_message
+        }))
+        
+    def notify_of_sensor_change(self, event):
+        event_message = event['message']
+        event_sensor = event['sensor']
+        self.send(text_data=json.dumps({
+            'type': MessageType.SENSOR_CHANGE.value,
+            'message': event_message,
+            'sensor': event_sensor
         }))
         
     def send_distance_data(self, event):

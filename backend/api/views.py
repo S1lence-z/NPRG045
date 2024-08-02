@@ -20,10 +20,7 @@ class SensorListCreateAPIView(APIView):
         serializer = SensorSerializer(sensors, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request):
-        def _update_sensor_manager(sensor):
-            SensorClientManager.get_instance().add_sensor_client(sensor)
-        
+    def post(self, request):        
         requested_port_name = request.data.get('name')
         requested_description = request.data.get('description')
         requested_device_hwid = request.data.get('device_hwid')
@@ -33,11 +30,12 @@ class SensorListCreateAPIView(APIView):
             sensor.is_connected = True
             sensor.save()
             serializer = SensorSerializer(sensor)
-            _update_sensor_manager(sensor)
+            SensorClientManager.get_instance().add_sensor_client(sensor)
             return Response(data={
                 'message': f'Known sensor with id {sensor.id} on port {requested_port_name} connected',
                 'sensor': serializer.data}, status=status.HTTP_200_OK)
             
+        #* Create a new sensor if the sensor does not already exist
         sensor = Sensor.objects.create(
             port_name=requested_port_name, 
             port_description=requested_description, 
@@ -46,7 +44,7 @@ class SensorListCreateAPIView(APIView):
         )
         sensor.save()
         serializer = SensorSerializer(sensor)
-        _update_sensor_manager(sensor)
+        SensorClientManager.get_instance().add_sensor_client(sensor)
         return Response(data={
             'message': f'New sensor with id {sensor.id} on port {requested_port_name} connected',
             'sensor': serializer.data}, status=status.HTTP_201_CREATED)
