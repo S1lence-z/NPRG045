@@ -43,8 +43,6 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                 case MessageType.PORT_CHANGE:
                     console.log("Port change occured");
                     setPortUpdateTrigger((prev) => prev + 1);
-                    console.log("Sensor change also could have occured");
-                    setSensorUpdateTrigger((prev) => prev + 1);
                     break;
                 case MessageType.SENSOR_CHANGE:
                     console.log("Sensor change occured");
