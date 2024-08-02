@@ -173,7 +173,8 @@ class SensorClientManager(SensorAppProvider):
             self._sensor_client_instances[sensor_model] = SensorClient(sensor_model)
             print(f'Added sensor instance. Updated sensor instances: {self._sensor_client_instances}')
             return
-        print(f'Sensor instance for port name: {sensor_model.port_name} already exists')
+        else:
+            print(f'Sensor instance for port name: {sensor_model.port_name} already exists')
         
     def remove_sensor_client(self, sensor: Sensor):
         """
@@ -188,7 +189,8 @@ class SensorClientManager(SensorAppProvider):
         if sensor in self._sensor_client_instances.keys():
             del self._sensor_client_instances[sensor]
             print(f'Removed sensor instance for port name: {sensor.port_name}')
-        print(f'Updated sensor instances: {self._sensor_client_instances}')
+            print(f'Updated sensor instances: {self._sensor_client_instances}')
+        print(f'No sensor instance found for port name: {sensor.port_name}')
             
     def start_distance_detector(self, sensor: Sensor, distance_profile: DistanceProfile) -> Detector:
         """

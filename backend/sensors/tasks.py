@@ -8,27 +8,30 @@ from asgiref.sync import async_to_sync
 
 REDIS_KEY = 'previous_port_names'
 
+###* Utility functions
+def _notify_on_port_change():
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        'sensor_updates',
+        {
+            'type': 'notify_of_port_change',
+            'message': 'There has been a change in the available ports.'
+        }
+    )
+    return 'Notifying of port change...'
+
+def _refresh_sensor_status(connected_ports: list[str]):
+    sensors = Sensor.objects.all()
+    for sensor in sensors:
+        if sensor.is_connected and sensor.port_name not in connected_ports:
+            sensor.is_connected = False
+            sensor.save()
+    return 'Updating sensor status...'
+
+
+###* Celery tasks
 @shared_task
 def monitor_serial_ports():
-    def _notify_on_port_change():
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'sensor_updates',
-            {
-                'type': 'notify_of_port_change',
-                'message': 'There has been a change in the available ports.'
-            }
-        )
-        return 'Notifying of port change...'
-
-    def _refresh_sensor_status(connected_ports: list[str]):
-        sensors = Sensor.objects.all()
-        for sensor in sensors:
-            if sensor.is_connected and sensor.port_name not in connected_ports:
-                sensor.is_connected = False
-                sensor.save()
-        return 'Updating sensor status...'
-    
     current_ports = filter_ports(get_serial_ports(), enhanced=True)
     current_port_names = [port.name for port in current_ports]
     

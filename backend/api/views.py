@@ -29,8 +29,8 @@ class SensorListCreateAPIView(APIView):
         if sensor:
             sensor.is_connected = True
             sensor.save()
+            #! the signal handler will update the sensor client manager
             serializer = SensorSerializer(sensor)
-            SensorClientManager.get_instance().add_sensor_client(sensor)
             return Response(data={
                 'message': f'Known sensor with id {sensor.id} on port {requested_port_name} connected',
                 'sensor': serializer.data}, status=status.HTTP_200_OK)
@@ -43,17 +43,13 @@ class SensorListCreateAPIView(APIView):
             is_connected=True
         )
         sensor.save()
+        #! the signal handler will update the sensor client manager
         serializer = SensorSerializer(sensor)
-        SensorClientManager.get_instance().add_sensor_client(sensor)
         return Response(data={
             'message': f'New sensor with id {sensor.id} on port {requested_port_name} connected',
             'sensor': serializer.data}, status=status.HTTP_201_CREATED)
         
 class SensorDetailAPIView(APIView):
-    def _update_sensor_manager(self, sensor, is_connected) -> None:
-        if not is_connected: 
-            SensorClientManager.get_instance().remove_sensor_client(sensor)
-    
     def put(self, request, pk):        
         try:
             sensor = Sensor.objects.get(pk=pk)
@@ -64,7 +60,7 @@ class SensorDetailAPIView(APIView):
         serializer = SensorSerializer(sensor, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            self._update_sensor_manager(sensor, sensor.is_connected)
+            #! the signal handler will update the sensor client manager
             return Response(data={
                 'message': f'Sensor with id {pk} on port {sensor.port_name} updated', 
                 'sensor': serializer.data}, status=status.HTTP_200_OK)
@@ -73,11 +69,10 @@ class SensorDetailAPIView(APIView):
     def delete(self, request, pk):        
         try:
             sensor = Sensor.objects.get(pk=pk)
-            sensor_name = sensor.port_name
             sensor.delete()
-            self._update_sensor_manager(sensor, sensor.is_connected)
+            #! the signal handler will update the sensor client manager
             return Response(data={
-                'message': f'Sensor with id {pk} on port {sensor_name} deleted',
+                'message': f'Sensor with id {pk} on port {sensor.port_name} deleted',
                 }, status=status.HTTP_200_OK)
         except Sensor.DoesNotExist:
             return Response({'message': f'Sensor with id {pk} not found'}, status=status.HTTP_404_NOT_FOUND)
