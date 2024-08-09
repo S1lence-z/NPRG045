@@ -17,7 +17,7 @@ def _send_notification(updated_sensor: Sensor):
             'sensor': SensorSerializer(updated_sensor).data
         }
     )
-    
+
 def _update_sensor_client_manager(updated_sensor: Sensor):
     if not updated_sensor.is_connected:
         return SensorClientManager.get_instance().remove_sensor_client(updated_sensor)
@@ -58,6 +58,5 @@ def handle_sensor_deletion(sender, instance, **kwargs):
     Returns:
     None
     """
-    
     _update_sensor_client_manager(instance)
     _send_notification(instance)

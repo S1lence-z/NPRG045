@@ -64,7 +64,7 @@ class SensorClientManager(SensorAppProvider):
         
     def __str__(self) -> str:
         return f'SensorClientManager(sensor_client_instances={self._sensor_client_instances})'
-    
+        
     def _get_sensor_client(self, sensor: Sensor) -> SensorClient:
         """
         Retrieves a sensor client instance based on the sensor.
@@ -244,4 +244,5 @@ class SensorClientManager(SensorAppProvider):
         client_instance = self._get_sensor_client(sensor)
         distance_detector = self._distance_detector_instances.get(client_instance)
         distance_detector.stop()
+        del self._distance_detector_instances[client_instance]
         print(f'Stopped distance detector for sensor: {sensor}')
