@@ -1,10 +1,17 @@
 import React, { createContext, useEffect, useState, ReactNode, useContext } from "react";
 
+interface DistanceData {
+    timestamp: string;
+    temperature: number;
+    distances: string;
+}
+
 interface WebSocketContextType {
     socket: WebSocket | null;
     status: boolean;
     portUpdateTrigger: number;
     sensorUpdateTrigger: number;
+    distanceDataQueue: DistanceData[];
 }
 
 enum MessageType {
@@ -23,6 +30,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [status, setStatus] = useState<boolean>(false);
     const [portUpdateTrigger, setPortUpdateTrigger] = useState<number>(0);
     const [sensorUpdateTrigger, setSensorUpdateTrigger] = useState<number>(0);
+    const [distanceDataQueue, setDistanceDataQueue] = useState<DistanceData[]>([]);
 
     useEffect(() => {
         const ws = new WebSocket(backendUrl);
@@ -49,7 +57,8 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                     setSensorUpdateTrigger((prev) => prev + 1);
                     break;
                 case MessageType.DISTANCE_DATA:
-                    console.log("Distance data received");
+                    console.log("Distance data received and queued");
+                    setDistanceDataQueue((prev) => [...prev, JSON.parse(event.data).data]);
                     break;
                 default:
                     console.error("Unknown message type");
@@ -65,7 +74,8 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     }, []);
 
     return (
-        <WebSocketContext.Provider value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger }}>
+        <WebSocketContext.Provider
+            value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger, distanceDataQueue }}>
             {children}
         </WebSocketContext.Provider>
     );

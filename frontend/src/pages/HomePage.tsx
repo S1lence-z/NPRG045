@@ -55,6 +55,7 @@ const SelectPort = () => {
 
     return (
         <div>
+            <h3>Available ports</h3>
             <ReactSelect
                 value={selectedPort}
                 onChange={handlePortChange}
@@ -109,7 +110,6 @@ const HomePage = () => {
         <div className="home-page">
             <h2>Home Page</h2>
             <div className="available-sensor">
-                <p>Available Sensors</p>
                 <SelectPort />
                 <KnownSensorsList />
             </div>

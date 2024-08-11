@@ -18,7 +18,8 @@
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^6.23.1",
     "react-select": "^5.8.0",
-    "reactstrap": "^9.2.2"
+    "reactstrap": "^9.2.2",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
