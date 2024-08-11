@@ -7,8 +7,11 @@ from .sensor_client import SensorClient
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from api.serializers import SensorSerializer
-from sensors.detector_serializers import DetectorResultEncoder
+from sensors.detector_result_encoder import DetectorResultEncoder
 import json
+from sensors.data_conversion.distance_convertor import DistanceResultConvertor
+import threading
+import time
 
 class SensorAppProvider(ABC):
     """
@@ -64,7 +67,7 @@ class SensorClientManager(SensorAppProvider):
         
     def __str__(self) -> str:
         return f'SensorClientManager(sensor_client_instances={self._sensor_client_instances})'
-    
+        
     def _get_sensor_client(self, sensor: Sensor) -> SensorClient:
         """
         Retrieves a sensor client instance based on the sensor.
@@ -135,7 +138,7 @@ class SensorClientManager(SensorAppProvider):
             update_rate=distance_profile_model.update_rate
         )
         
-    def send_distance_data_to_frontend(self, sensor: Sensor, detector_result: dict[int, DetectorResult]):
+    def send_distance_data_to_frontend(self, sensor: Sensor, detector_result: dict):
         """
         Sends distance data from a sensor to the frontend.
 
@@ -148,7 +151,9 @@ class SensorClientManager(SensorAppProvider):
         """
         channel_layer = get_channel_layer()
         sensor_info = SensorSerializer(sensor).data
-        sensor_data = json.loads(json.dumps(detector_result, cls=DetectorResultEncoder))
+        #! this serializes the whole detector result object
+        # sensor_data = json.loads(json.dumps(detector_result, cls=DetectorResultEncoder))
+        sensor_data = detector_result
         async_to_sync(channel_layer.group_send)(
             'sensor_updates',
             {
@@ -173,7 +178,8 @@ class SensorClientManager(SensorAppProvider):
             self._sensor_client_instances[sensor_model] = SensorClient(sensor_model)
             print(f'Added sensor instance. Updated sensor instances: {self._sensor_client_instances}')
             return
-        print(f'Sensor instance for port name: {sensor_model.port_name} already exists')
+        else:
+            print(f'Sensor instance for port name: {sensor_model.port_name} already exists')
         
     def remove_sensor_client(self, sensor: Sensor):
         """
@@ -188,7 +194,13 @@ class SensorClientManager(SensorAppProvider):
         if sensor in self._sensor_client_instances.keys():
             del self._sensor_client_instances[sensor]
             print(f'Removed sensor instance for port name: {sensor.port_name}')
-        print(f'Updated sensor instances: {self._sensor_client_instances}')
+            print(f'Updated sensor instances: {self._sensor_client_instances}')
+        print(f'No sensor instance found for port name: {sensor.port_name}')
+        
+    ###! The following methods are used to run and stop the distance detector
+    
+    _detector_threads: dict[Sensor, threading.Thread] = {}
+    _stop_events: dict[Sensor, threading.Event] = {}
             
     def start_distance_detector(self, sensor: Sensor, distance_profile: DistanceProfile) -> Detector:
         """
@@ -221,14 +233,22 @@ class SensorClientManager(SensorAppProvider):
         distance_detector.start()
         print(f'Started distance detector for sensor: {sensor}')
         
-        while distance_detector.started:
-            data = distance_detector.get_next()
-            if data is not None:
-                self.send_distance_data_to_frontend(sensor, data)
-            if not distance_detector.started:
-                del self._distance_detector_instances[client_instance]
-                break
-    
+        #! Use another thread to run the distance measuring in the background
+        stop_event = threading.Event()
+        self._stop_events[sensor] = stop_event
+        
+        def run_distance_detector():
+            while not stop_event.is_set():
+                data = distance_detector.get_next()
+                if data is not None:
+                    converted_data = DistanceResultConvertor.convert_to_graph_data(data)
+                    self.send_distance_data_to_frontend(sensor, converted_data)
+                time.sleep(1)
+            
+        detector_thread = threading.Thread(target=run_distance_detector)
+        detector_thread.start()
+        self._detector_threads[sensor] = detector_thread
+        
     def stop_distance_detector(self, sensor: Sensor):
         """
         Stops the distance detector for a sensor.
@@ -241,5 +261,14 @@ class SensorClientManager(SensorAppProvider):
         """
         client_instance = self._get_sensor_client(sensor)
         distance_detector = self._distance_detector_instances.get(client_instance)
-        distance_detector.stop()
-        print(f'Stopped distance detector for sensor: {sensor}')
+        
+        if sensor in self._stop_events:
+            self._stop_events[sensor].set()
+            self._detector_threads[sensor].join()
+            del self._detector_threads[sensor]
+            del self._stop_events[sensor]
+        
+        if distance_detector:
+            distance_detector.stop()
+            del self._distance_detector_instances[client_instance]
+            print(f'Stopped distance detector for sensor: {sensor}')
