@@ -2,8 +2,12 @@ import React, { createContext, useEffect, useState, ReactNode, useContext } from
 
 interface DistanceData {
     timestamp: string;
+    distances: {
+        value: number;
+        limits: number[];
+    };
+    strengths: number[];
     temperature: number;
-    distances: string;
 }
 
 interface WebSocketContextType {
@@ -58,7 +62,13 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                     break;
                 case MessageType.DISTANCE_DATA:
                     console.log("Distance data received and queued");
-                    setDistanceDataQueue((prev) => [...prev, JSON.parse(event.data).data]);
+                    const packetData = JSON.parse(event.data).data;
+                    console.log(packetData);
+                    if (distanceDataQueue.length >= 10) {
+                        setDistanceDataQueue((prev) => prev.slice(1).concat(packetData));
+                    } else {
+                        setDistanceDataQueue((prev) => prev.concat(packetData));
+                    }
                     break;
                 default:
                     console.error("Unknown message type");

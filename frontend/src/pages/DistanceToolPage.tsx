@@ -1,9 +1,9 @@
-import "../css/distancetoolpage.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { Sensor } from "../components/Types";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import { LineChart, ResponsiveContainer, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { CChart } from "@coreui/react-chartjs";
+import { CButton, CCard, CCardBody, CCardTitle } from "@coreui/react";
 
 //TODO: import and use cardStrip when you make it work :)
 // interface ConnectedSensorCardProps {
@@ -72,65 +72,148 @@ const AvailableMeasuringSensors = () => {
     }, [sensorUpdateTrigger]);
 
     return (
-        <div className="available-measuring-sensors">
-            <ol>
-                {connectedSensors.map((sensor) => {
-                    return (
-                        <li key={sensor.id}>
-                            <h3>Sensor {sensor.id}</h3>
-                            <p>
-                                <b>COM Port:</b> {sensor.port_name}
-                            </p>
-                            <button onClick={() => startDistanceMeasurement(sensor.id)}>Start</button>
-                            <button onClick={() => stopDistanceMeasurement(sensor.id)}>Stop</button>
-                        </li>
-                    );
-                })}
-            </ol>
+        <div className="card-group">
+            {connectedSensors.map((sensor) => {
+                return (
+                    <CCard key={sensor.id}>
+                        <CCardBody>
+                            <CCardTitle>Sensor {sensor.id}</CCardTitle>
+                            <CButton
+                                type="button"
+                                className="btn-success"
+                                onClick={() => startDistanceMeasurement(sensor.id)}>
+                                Start
+                            </CButton>
+                            <CButton
+                                type="button"
+                                className="btn-danger"
+                                onClick={() => stopDistanceMeasurement(sensor.id)}>
+                                Stop
+                            </CButton>
+                        </CCardBody>
+                    </CCard>
+                );
+            })}
         </div>
     );
 };
 
 // TODO: show the distance measurements in a graph
 // TODO: show strength of signal in a graph
-//! All data must be processed on the backend, frontend just displays the data
-const ShowDistanceMeasurements = () => {
+const ShowDistanceGraph = () => {
     const { distanceDataQueue } = useWebSocket();
 
     return (
         <div className="show-distance-measurements">
-            <p>Distance Graph</p>
-            <ResponsiveContainer width="100%" height="90%">
-                <LineChart
-                    width={500}
-                    height={200}
-                    data={distanceDataQueue}
-                    margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="timestamp" />
-                    <YAxis domain={[25, 40]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="temperature" stroke="black" activeDot={{ r: 8 }} />
-                </LineChart>
-            </ResponsiveContainer>
+            <div className="card bg-warning">
+                <div className="card-header">Distance Graph</div>
+                <div className="card-body">
+                    <div className="c-chart-wrapper">
+                        <CChart
+                            height={300}
+                            width={400}
+                            type="line"
+                            data={{
+                                labels: distanceDataQueue.map((data) => data.timestamp),
+                                datasets: [
+                                    {
+                                        label: "Distance",
+                                        backgroundColor: "rgba(255,99,132,0.2)",
+                                        borderColor: "rgba(255,99,132,1)",
+                                        pointBackgroundColor: "rgba(255,99,132,1)",
+                                        pointBorderColor: "#fff",
+                                        data: distanceDataQueue.map((data) => data.distances.value),
+                                    },
+                                ],
+                            }}></CChart>
+                    </div>
+                </div>
+
+                {/* <LineChart
+                width={730}
+                height={300}
+                data={distanceDataQueue}
+                margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" />
+                <YAxis type="number" domain={["data.distances.limits[0]", "data.distances.limits[1]"]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="distances.value" stroke="black" activeDot={{ r: 8 }} />
+            }}
+
+            {/* <LineChart
+                width={730}
+                height={300}
+                data={distanceDataQueue}
+                margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" />
+                <YAxis type="number" domain={["data.distances.limits[0]", "data.distances.limits[1]"]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="distances.value" stroke="black" activeDot={{ r: 8 }} />
+            </LineChart> */}
+            </div>
+        </div>
+    );
+};
+
+//! All data must be processed on the backend, frontend just displays the data
+const ShowTemperatureGraph = () => {
+    const { distanceDataQueue } = useWebSocket();
+
+    return (
+        <div className="card mb-4 bg-danger">
+            <div className="card-header">Temperature Graph</div>
+            <div className="card-body">
+                <div className="c-chart-wrapper">
+                    <CChart
+                        height={300}
+                        width={400}
+                        type="line"
+                        data={{
+                            labels: distanceDataQueue.map((data) => data.timestamp),
+                            datasets: [
+                                {
+                                    label: "Temperature",
+                                    backgroundColor: "rgba(255,99,132,0.2)",
+                                    borderColor: "rgba(255,99,132,1)",
+                                    pointBackgroundColor: "rgba(255,99,132,1)",
+                                    pointBorderColor: "#fff",
+                                    data: distanceDataQueue.map((data) => data.temperature),
+                                },
+                            ],
+                        }}></CChart>
+                </div>
+            </div>
         </div>
     );
 };
 
 const DistanceToolPage = () => {
     return (
-        <div className="distance-tool-page">
+        <div className="distance-tool-page d-flex flex-column">
             <h2>Distance Tool</h2>
-            <h3>Sensors Available to Measure Distance</h3>
-            <AvailableMeasuringSensors />
-            <h3>Temperature Graph</h3>
-            <ShowDistanceMeasurements />
+            <h4>Sensors Available to Measure Distance</h4>
+            <div className="row row-cols-2">
+                <AvailableMeasuringSensors />
+            </div>
+            <h4>Charts</h4>
+            <div className="row row-cols-2">
+                <ShowDistanceGraph />
+                <ShowTemperatureGraph />
+            </div>
         </div>
     );
 };

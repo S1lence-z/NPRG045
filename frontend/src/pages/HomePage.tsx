@@ -1,12 +1,8 @@
-import "../css/homepage.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Button } from "reactstrap";
 import ReactSelect, { GroupBase, SingleValue } from "react-select";
 import { Port, SelectOption, Sensor } from "../components/Types";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import CardStrip from "../components/CardStrip";
-import SensorCard from "../components/SensorCard";
 
 const SelectPort = () => {
     const [selectedPort, setSelectedPort] = useState<SingleValue<SelectOption<Port>> | null>(null);
@@ -56,15 +52,17 @@ const SelectPort = () => {
     return (
         <div>
             <h3>Available ports</h3>
-            <ReactSelect
-                value={selectedPort}
-                onChange={handlePortChange}
-                options={portOptions}
-                placeholder="Select a port"
-            />
-            <Button color="primary" onClick={handlePortConnection}>
-                Connect
-            </Button>
+            <div className="d-flex">
+                <ReactSelect
+                    value={selectedPort}
+                    onChange={handlePortChange}
+                    options={portOptions}
+                    placeholder="Select a port"
+                />
+                <button type="button" className="btn btn-primary mx-2" onClick={handlePortConnection}>
+                    Connect
+                </button>
+            </div>
         </div>
     );
 };
@@ -91,16 +89,31 @@ const KnownSensorsList = () => {
     return (
         <div>
             <h3>Known Sensors</h3>
-            <CardStrip
-                cards={knownSensors.map((sensor) => {
-                    return {
-                        id: sensor.id,
-                        title: `Sensor ${sensor.id}`,
-                        content: sensor,
-                    };
+            <div className="row row-cols-3">
+                {knownSensors.map((sensor: Sensor) => {
+                    return (
+                        <div className="card px-2 py-2 mx-2 bg-info">
+                            <div className="card-title">
+                                <b>Sensor {sensor.id}</b>
+                            </div>
+                            <div className="card-text">
+                                <p>
+                                    <b>COM Port:</b> {sensor.port_name}
+                                </p>
+                                <p>
+                                    <b>Description:</b> {sensor.port_description}
+                                </p>
+                                <p>
+                                    <b>Hardware ID:</b> {sensor.hwid}
+                                </p>
+                                <p>
+                                    <b>Status:</b> {sensor.is_connected ? "Connected" : "Disconnected"}
+                                </p>
+                            </div>
+                        </div>
+                    );
                 })}
-                CardComponent={SensorCard}
-            />
+            </div>
         </div>
     );
 };
