@@ -9,7 +9,7 @@ type ContentFieldProps = {
 
 const AppContentField: React.FC<ContentFieldProps> = () => {
     return (
-        <CContainer className="py-3">
+        <CContainer>
             <Suspense fallback={<CSpinner color="primary" />}>
                 <Routes>
                     {DefinedRoutes.map((route: AppRoute) => {

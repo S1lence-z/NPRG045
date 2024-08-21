@@ -5,9 +5,7 @@ const DefaultLayout = () => {
     return (
         <>
             <AppSideBar />
-            <div className="body d-flex flex-grow-1">
-                <AppContentField />
-            </div>
+            <AppContentField />
         </>
     );
 };
