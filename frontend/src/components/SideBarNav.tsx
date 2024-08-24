@@ -1,43 +1,79 @@
 import { CSidebarNav, CNavTitle, CNavItem, CNavLink, CNavGroup } from "@coreui/react";
 import { NavLink } from "react-router-dom";
-// TODO: add routes dynamically
-// import { DefinedRoutes } from "../Routes";
+import { DefinedRoutes } from "../Routes";
+import { AppRoute, NavigationGroups } from "./Types";
+import { useEffect } from "react";
 
-const SideBarNav = () => {
-    return (
-        <CSidebarNav>
-            <CNavTitle> Exploration Tool</CNavTitle>
-            <CNavItem>
-                <CNavLink to="/" as={NavLink}>
-                    Home
-                </CNavLink>
+const createNavItem = (route: AppRoute, hasLink: boolean = false) => {
+    if (hasLink) {
+        return (
+            <CNavItem key={route.title} href={route.customLink}>
+                <span className="nav-icon">
+                    <span className="nav-icon-bullet"></span>
+                </span>{" "}
+                {route.title}
             </CNavItem>
-            <CNavGroup toggler={<> Sensor Tools</>}>
-                <CNavItem>
-                    <CNavLink to="/distance-tool" as={NavLink}>
-                        <span className="nav-icon">
-                            <span className="nav-icon-bullet"></span>
-                        </span>{" "}
-                        Distance Detector
-                    </CNavLink>
-                </CNavItem>
-                <CNavItem>
-                    <CNavLink to="/motion-tool">
-                        <span className="nav-icon">
-                            <span className="nav-icon-bullet"></span>
-                        </span>{" "}
-                        Motion Detector
-                    </CNavLink>
-                </CNavItem>
-            </CNavGroup>
-            <CNavGroup toggler={<> CoreUi Docs</>}>
-                <CNavItem href="https://coreui.io">
+        );
+    } else {
+        return (
+            <CNavItem key={route.path}>
+                <CNavLink to={route.path} as={NavLink}>
                     <span className="nav-icon">
                         <span className="nav-icon-bullet"></span>
                     </span>{" "}
-                    Download CoreUI
-                </CNavItem>
-            </CNavGroup>
+                    {route.title}
+                </CNavLink>
+            </CNavItem>
+        );
+    }
+};
+
+const populateSideBarNav = () => {
+    const sideBarItemsByGroup: NavigationGroups = {};
+
+    DefinedRoutes.map((route) => {
+        let groupName = route.title;
+        if (route.group) {
+            groupName = route.group;
+        }
+        if (!sideBarItemsByGroup[groupName]) {
+            sideBarItemsByGroup[groupName] = [];
+        }
+        let navBarItem = createNavItem(route);
+        if (route.customLink) {
+            navBarItem = createNavItem(route, true);
+        }
+        sideBarItemsByGroup[groupName].push(navBarItem);
+    });
+
+    return (
+        <>
+            {Object.entries(sideBarItemsByGroup).map(([groupName, navItems]) => {
+                if (navItems.length === 1) {
+                    return navItems[0];
+                } else {
+                    return (
+                        <CNavGroup key={groupName} toggler={groupName}>
+                            {navItems.map((item) => item)}
+                        </CNavGroup>
+                    );
+                }
+            })}
+        </>
+    );
+};
+
+const SideBarNav = () => {
+    let renderedItems = populateSideBarNav();
+
+    useEffect(() => {
+        renderedItems = populateSideBarNav();
+    }, [DefinedRoutes]);
+
+    return (
+        <CSidebarNav>
+            <CNavTitle> Exploration Tool</CNavTitle>
+            {renderedItems}
         </CSidebarNav>
     );
 };

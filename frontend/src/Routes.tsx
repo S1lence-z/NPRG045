@@ -1,19 +1,14 @@
+import { AppRoute } from "./components/Types";
 import DistanceToolPage from "./pages/DistanceToolPage";
 import HomePage from "./pages/HomePage";
-
-export interface AppRoute {
-    title: string,
-    path: string;
-    component: () => JSX.Element;
-}
 
 const DummyComponent = () => {
     return (
         <div>
             <p>Testing Component</p>
         </div>
-    )
-}
+    );
+};
 
 export const DefinedRoutes: AppRoute[] = [
     {
@@ -22,13 +17,20 @@ export const DefinedRoutes: AppRoute[] = [
         component: HomePage,
     },
     {
+        customLink: "https://coreui.io",
+        title: "CoreUI Documentation",
+        component: DummyComponent,
+    },
+    {
+        group: "Sensor Tools",
         title: "Distance Detector",
-        path: "/distance-tool",
+        path: "/distance-detector",
         component: DistanceToolPage,
     },
     {
+        group: "Sensor Tools",
         title: "Motion Detector",
-        path: "/motion-tool",
+        path: "/motion-detector",
         component: DummyComponent,
     },
 ];

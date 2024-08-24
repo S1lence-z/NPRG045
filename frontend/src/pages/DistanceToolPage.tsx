@@ -1,33 +1,10 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sensor } from "../components/Types";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { CChart } from "@coreui/react-chartjs";
 import { CButton, CCard, CCardBody, CCardTitle } from "@coreui/react";
-
-//TODO: import and use cardStrip when you make it work :)
-// interface ConnectedSensorCardProps {
-//     cardData: Sensor;
-//     startDistanceMeasurement: (sensorId: number) => void;
-//     stopDistanceMeasurement: (sensorId: number) => void;
-// }
-
-// const ConnectedSensorCard: React.FC<ConnectedSensorCardProps> = ({
-//     cardData,
-//     startDistanceMeasurement,
-//     stopDistanceMeasurement,
-// }) => {
-//     return (
-//         <div className="connected-sensor-card">
-//             <h3>Sensor {cardData.id}</h3>
-//             <p>
-//                 <b>COM Port:</b> {cardData.port_name}
-//             </p>
-//             <button onClick={() => startDistanceMeasurement(cardData.id)}>Start</button>
-//             <button onClick={() => stopDistanceMeasurement(cardData.id)}>Stop</button>
-//         </div>
-//     );
-// };
+import { Chart as ChartJS } from "chart.js";
 
 const AvailableMeasuringSensors = () => {
     const [connectedSensors, setConnectedSensors] = useState<Sensor[]>([]);
@@ -98,10 +75,19 @@ const AvailableMeasuringSensors = () => {
     );
 };
 
-// TODO: show the distance measurements in a graph
-// TODO: show strength of signal in a graph
 const ShowDistanceGraph = () => {
     const { distanceDataQueue } = useWebSocket();
+    const distanceChartRef = useRef<ChartJS>(null);
+    
+    useEffect(() => {
+        if (distanceChartRef.current) {
+            const chart = distanceChartRef.current;
+            chart.data.labels = distanceDataQueue.map((data) => data.timestamp);
+            chart.data.datasets[0].data = distanceDataQueue.map((data) => data.distances.value);
+            // TODO: show strength of signal in a graph
+            chart.update();
+        }  
+    }, [distanceDataQueue]);
 
     return (
         <div className="show-distance-measurements">
@@ -110,11 +96,12 @@ const ShowDistanceGraph = () => {
                 <div className="card-body">
                     <div className="c-chart-wrapper">
                         <CChart
-                            height={300}
-                            width={400}
+                            ref={distanceChartRef}
+                            height={200}
+                            width={300}
                             type="line"
                             data={{
-                                labels: distanceDataQueue.map((data) => data.timestamp),
+                                labels: [],
                                 datasets: [
                                     {
                                         label: "Distance",
@@ -122,48 +109,12 @@ const ShowDistanceGraph = () => {
                                         borderColor: "rgba(255,99,132,1)",
                                         pointBackgroundColor: "rgba(255,99,132,1)",
                                         pointBorderColor: "#fff",
-                                        data: distanceDataQueue.map((data) => data.distances.value),
+                                        data: [],
                                     },
                                 ],
                             }}></CChart>
                     </div>
                 </div>
-
-                {/* <LineChart
-                width={730}
-                height={300}
-                data={distanceDataQueue}
-                margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis type="number" domain={["data.distances.limits[0]", "data.distances.limits[1]"]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="distances.value" stroke="black" activeDot={{ r: 8 }} />
-            }}
-
-            {/* <LineChart
-                width={730}
-                height={300}
-                data={distanceDataQueue}
-                margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis type="number" domain={["data.distances.limits[0]", "data.distances.limits[1]"]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="distances.value" stroke="black" activeDot={{ r: 8 }} />
-            </LineChart> */}
             </div>
         </div>
     );
@@ -172,18 +123,29 @@ const ShowDistanceGraph = () => {
 //! All data must be processed on the backend, frontend just displays the data
 const ShowTemperatureGraph = () => {
     const { distanceDataQueue } = useWebSocket();
+    const temperatureChartRef = useRef<ChartJS>(null);
+
+    useEffect(() => {
+        if (temperatureChartRef.current) {
+            const chart = temperatureChartRef.current;
+            chart.data.labels = distanceDataQueue.map((data) => data.timestamp);
+            chart.data.datasets[0].data = distanceDataQueue.map((data) => data.temperature);
+            chart.update();
+        }  
+    }, [distanceDataQueue]);
 
     return (
-        <div className="card mb-4 bg-danger">
+        <div className="card mb-4">
             <div className="card-header">Temperature Graph</div>
             <div className="card-body">
                 <div className="c-chart-wrapper">
                     <CChart
-                        height={300}
-                        width={400}
+                        ref={temperatureChartRef}
+                        height={200}
+                        width={300}
                         type="line"
                         data={{
-                            labels: distanceDataQueue.map((data) => data.timestamp),
+                            labels: [],
                             datasets: [
                                 {
                                     label: "Temperature",
@@ -191,7 +153,7 @@ const ShowTemperatureGraph = () => {
                                     borderColor: "rgba(255,99,132,1)",
                                     pointBackgroundColor: "rgba(255,99,132,1)",
                                     pointBorderColor: "#fff",
-                                    data: distanceDataQueue.map((data) => data.temperature),
+                                    data: [],
                                 },
                             ],
                         }}></CChart>
