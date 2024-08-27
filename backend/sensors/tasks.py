@@ -1,5 +1,5 @@
 from celery import shared_task
-from .utils import get_serial_ports, filter_ports
+from sensors.utils import get_serial_ports, filter_ports, refresh_sensor_status, notify_on_port_change
 from django.core.cache import cache
 import json
 from .models import Sensor
@@ -7,27 +7,6 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 REDIS_KEY = 'previous_port_names'
-
-###* Utility functions
-def _notify_on_port_change():
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'sensor_updates',
-        {
-            'type': 'notify_of_port_change',
-            'message': 'There has been a change in the available ports.'
-        }
-    )
-    return 'Notifying of port change...'
-
-def _refresh_sensor_status(connected_ports: list[str]):
-    sensors = Sensor.objects.all()
-    for sensor in sensors:
-        if sensor.is_connected and sensor.port_name not in connected_ports:
-            sensor.is_connected = False
-            sensor.save()
-    return 'Updating sensor status...'
-
 
 ###* Celery tasks
 @shared_task
@@ -48,9 +27,9 @@ def monitor_serial_ports():
     #* Compare the current port names with the previous port names
     if _has_changed(current_port_names, previous_port_names):
         cache.set(REDIS_KEY, json.dumps(current_port_names))
-        _refresh_sensor_status(current_port_names)
-        return _notify_on_port_change()
+        refresh_sensor_status(current_port_names)
+        return notify_on_port_change()
     
     #* No change detected
-    _refresh_sensor_status(current_port_names)
+    refresh_sensor_status(current_port_names)
     return 'No port change detected...'
