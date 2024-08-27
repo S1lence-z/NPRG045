@@ -17,11 +17,6 @@ export const DefinedRoutes: AppRoute[] = [
         component: HomePage,
     },
     {
-        customLink: "https://coreui.io",
-        title: "CoreUI Documentation",
-        component: DummyComponent,
-    },
-    {
         group: "Sensor Tools",
         title: "Distance Detector",
         path: "/distance-detector",
@@ -31,6 +26,11 @@ export const DefinedRoutes: AppRoute[] = [
         group: "Sensor Tools",
         title: "Motion Detector",
         path: "/motion-detector",
+        component: DummyComponent,
+    },
+    {
+        customLink: "https://coreui.io",
+        title: "CoreUI Documentation",
         component: DummyComponent,
     },
 ];
