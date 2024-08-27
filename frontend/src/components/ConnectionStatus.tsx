@@ -9,9 +9,5 @@ const PrintStatus = ({ status }: { status: boolean }) => {
 export const BackendConnectionStatus = () => {
     const { status: backendStatus } = useWebSocket();
 
-    return (
-        <div>
-            <p>Backend: {PrintStatus({ status: backendStatus })}</p>
-        </div>
-    );
+    return <>Backend: {PrintStatus({ status: backendStatus })}</>;
 };

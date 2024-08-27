@@ -1,7 +1,7 @@
-import { CSidebarNav, CNavTitle, CNavItem, CNavLink, CNavGroup } from "@coreui/react";
+import { CDropdown, CDropdownMenu, CDropdownToggle, CNavbarNav, CNavItem, CNavLink } from "@coreui/react";
 import { NavLink } from "react-router-dom";
-import { DefinedRoutes } from "../Routes";
 import { AppRoute, NavigationGroups } from "./Types";
+import { DefinedRoutes } from "../Routes";
 import { useEffect } from "react";
 
 const createNavItem = (route: AppRoute, hasLink: boolean = false) => {
@@ -28,34 +28,35 @@ const createNavItem = (route: AppRoute, hasLink: boolean = false) => {
     }
 };
 
-const populateSideBarNav = () => {
-    const sideBarItemsByGroup: NavigationGroups = {};
+const populateNavigation = () => {
+    const navItemsByGroup: NavigationGroups = {};
 
     DefinedRoutes.map((route) => {
         let groupName = route.title;
         if (route.group) {
             groupName = route.group;
         }
-        if (!sideBarItemsByGroup[groupName]) {
-            sideBarItemsByGroup[groupName] = [];
+        if (!navItemsByGroup[groupName]) {
+            navItemsByGroup[groupName] = [];
         }
         let navBarItem = createNavItem(route);
         if (route.customLink) {
             navBarItem = createNavItem(route, true);
         }
-        sideBarItemsByGroup[groupName].push(navBarItem);
+        navItemsByGroup[groupName].push(navBarItem);
     });
 
     return (
         <>
-            {Object.entries(sideBarItemsByGroup).map(([groupName, navItems]) => {
+            {Object.entries(navItemsByGroup).map(([groupName, navItems]) => {
                 if (navItems.length === 1) {
                     return navItems[0];
                 } else {
                     return (
-                        <CNavGroup key={groupName} toggler={groupName}>
-                            {navItems.map((item) => item)}
-                        </CNavGroup>
+                        <CDropdown variant="nav-item" key={groupName}>
+                            <CDropdownToggle color="secondary">{groupName}</CDropdownToggle>
+                            <CDropdownMenu>{navItems.map((item) => item)}</CDropdownMenu>
+                        </CDropdown>
                     );
                 }
             })}
@@ -63,19 +64,20 @@ const populateSideBarNav = () => {
     );
 };
 
-const SideBarNav = () => {
-    let renderedItems = populateSideBarNav();
+const AppNavBarNavigation = () => {
+    let renderedItems = populateNavigation();
 
     useEffect(() => {
-        renderedItems = populateSideBarNav();
+        renderedItems = populateNavigation();
     }, [DefinedRoutes]);
 
     return (
-        <CSidebarNav>
-            <CNavTitle> Exploration Tool</CNavTitle>
-            {renderedItems}
-        </CSidebarNav>
+        <>
+            <CNavbarNav>
+                {renderedItems}
+            </CNavbarNav>
+        </>
     );
 };
 
-export default SideBarNav;
+export default AppNavBarNavigation;
