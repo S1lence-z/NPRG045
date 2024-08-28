@@ -17,16 +17,17 @@ import { useEffect, useState } from "react";
 import { DistanceProfile, SelectOption, Sensor } from "./Types";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import DistanceProfileForm from "./DistanceProfileForm";
+import { DistanceProfileProvider, useDistanceProfile } from "../contexts/DistanceProfileContext";
 
 const SensorSelection = () => {
     const [connectedSensors, setConnectedSensors] = useState<Sensor[]>([]);
     const { sensorUpdateTrigger } = useWebSocket();
+    const { selectedProfile } = useDistanceProfile();
 
     const fetchConnectedSensors = () => {
         axios
             .get("http://127.0.0.1:8000/api/v1/sensors/connected/")
             .then((response) => {
-                console.log(response.data);
                 setConnectedSensors(response.data);
             })
             .catch((error) => {
@@ -35,8 +36,11 @@ const SensorSelection = () => {
     };
 
     const startDistanceMeasurement = (sensorId: number) => {
+        const postData = {
+            distance_profile_id: selectedProfile?.id,
+        };
         axios
-            .post(`http://127.0.0.1:8000/api/v1/measurements/distance/${sensorId}/start`)
+            .post(`http://127.0.0.1:8000/api/v1/measurements/distance/${sensorId}/start`, postData)
             .then((response) => {
                 console.log(response.data);
             })
@@ -94,34 +98,22 @@ const SensorSelection = () => {
 };
 
 const DistanceProfileSelection = () => {
-    const [knownProfiles, setKnownProfiles] = useState<DistanceProfile[]>([]);
+    // Distance profile context
+    const { knownProfiles, selectedProfile, setSelectedProfile, triggerFetchProfiles } = useDistanceProfile();
+    // Profile options
     const [profileOptions, setProfileOptions] = useState<SelectOption<string>[]>([]);
-    // Profile selection
-    const [selectedProfile, setSelectedProfile] = useState<DistanceProfile | undefined>(undefined);
     // Modals
     const [createProfileModalVisible, setCreateProfileModalVisible] = useState(false);
     const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
 
-    const fetchDistanceProfiles = () => {
-        axios
-            .get("http://127.0.0.1:8000/api/v1/profiles/distance/")
-            .then((response) => {
-                const profiles = response.data;
-                setKnownProfiles(profiles);
-            })
-            .catch((error) => {
-                console.error("There was an error fetching the distance profiles.", error);
-            });
-    };
-
     const handleProfileChange = (event: any) => {
         const selectedProfileName = event.target.value;
-        const selectedProfile = knownProfiles.find((profile) => {
+        const newSelectedProfile = knownProfiles.find((profile) => {
             if (profile.name === selectedProfileName) {
                 return profile;
             }
         });
-        setSelectedProfile(selectedProfile);
+        setSelectedProfile(newSelectedProfile);
     };
 
     const handleProfileDeletion = () => {
@@ -133,7 +125,7 @@ const DistanceProfileSelection = () => {
             .delete(`http://127.0.0.1:8000/api/v1/profiles/distance/${profileId}`)
             .then((response) => {
                 console.log(response.data);
-                fetchDistanceProfiles();
+                triggerFetchProfiles();
             })
             .catch((error) => {
                 console.error(JSON.stringify(error));
@@ -141,11 +133,10 @@ const DistanceProfileSelection = () => {
     };
 
     useEffect(() => {
-        fetchDistanceProfiles();
+        triggerFetchProfiles();
     }, [createProfileModalVisible, editProfileModalVisible]);
 
     useEffect(() => {
-        console.log("Known profiles: ", knownProfiles);
         setProfileOptions(
             knownProfiles.map((profile: DistanceProfile) => {
                 return new SelectOption<string>(profile.name, profile.name);
@@ -202,12 +193,13 @@ const DistanceProfileSelection = () => {
                     <DistanceProfileForm distanceProfile={selectedProfile} />
                 </CModalBody>
             </CModal>
-            <DistanceProfileDetails selectedProfile={selectedProfile} />
         </>
     );
 };
 
-const DistanceProfileDetails = ({ selectedProfile }: { selectedProfile: DistanceProfile | undefined }) => {
+const DistanceProfileDetails = () => {
+    const { selectedProfile } = useDistanceProfile();
+
     const showProfileDetails = (profile: DistanceProfile | undefined) => {
         if (profile) {
             const rangeStart = profile.start_m;
@@ -333,14 +325,17 @@ const DistanceProfileDetails = ({ selectedProfile }: { selectedProfile: Distance
 
 const DistanceToolControls = () => {
     return (
-        <div style={{ width: "370px" }} className="d-flex flex-column justify-content-evenly">
-            <h5>Controls</h5>
-            <SensorSelection />
-            <div className="mt-2">
-                <h5>Distance Profile</h5>
-                <DistanceProfileSelection />
+        <DistanceProfileProvider>
+            <div style={{ width: "370px" }} className="d-flex flex-column justify-content-evenly">
+                <h5>Controls</h5>
+                <SensorSelection />
+                <div className="mt-2">
+                    <h5>Distance Profile</h5>
+                    <DistanceProfileSelection />
+                    <DistanceProfileDetails />
+                </div>
             </div>
-        </div>
+        </DistanceProfileProvider>
     );
 };
 

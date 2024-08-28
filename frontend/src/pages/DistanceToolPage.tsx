@@ -5,7 +5,7 @@ import { Chart as ChartJS } from "chart.js";
 import DistanceToolControls from "../components/DistanceToolControls";
 import { CCard, CCardBody, CCardHeader } from "@coreui/react";
 
-const chartHeight = 50;
+const chartHeight = 130;
 const chartWidth = 200;
 
 const DistanceChartCard = () => {
@@ -15,9 +15,16 @@ const DistanceChartCard = () => {
     useEffect(() => {
         if (distanceChartRef.current) {
             const chart = distanceChartRef.current;
-            chart.data.labels = distanceDataQueue.map((data) => data.timestamp);
-            chart.data.datasets[0].data = distanceDataQueue.map((data) => data.distances.value);
-            // TODO: show strength of signal in a graph
+            const labels = distanceDataQueue.map((data) => data.timestamp);
+            const distances = distanceDataQueue.map((data) => data.distances.value);
+            const temperatures = distanceDataQueue.map((data) => data.temperature);
+            const strengths = distanceDataQueue.map((data) => data.strengths[0]);
+            // TODO: edit the data structure to include the strength of the signal
+
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = distances;
+            chart.data.datasets[1].data = temperatures;
+            chart.data.datasets[2].data = strengths;
             chart.update();
         }
     }, [distanceDataQueue]);
@@ -40,46 +47,25 @@ const DistanceChartCard = () => {
                                 borderColor: "rgba(255,99,132,1)",
                                 pointBackgroundColor: "rgba(255,99,132,1)",
                                 pointBorderColor: "#fff",
+                                yAxisID: "y-distance",
                                 data: [],
                             },
-                        ],
-                    }}></CChart>
-            </CCardBody>
-        </CCard>
-    );
-};
-
-const TemperatureChartCard = () => {
-    const { distanceDataQueue } = useWebSocket();
-    const temperatureChartRef = useRef<ChartJS>(null);
-
-    useEffect(() => {
-        if (temperatureChartRef.current) {
-            const chart = temperatureChartRef.current;
-            chart.data.labels = distanceDataQueue.map((data) => data.timestamp);
-            chart.data.datasets[0].data = distanceDataQueue.map((data) => data.temperature);
-            chart.update();
-        }
-    }, [distanceDataQueue]);
-
-    return (
-        <CCard className="mt-2">
-            <CCardHeader>Temperature Data</CCardHeader>
-            <CCardBody>
-                <CChart
-                    ref={temperatureChartRef}
-                    height={chartHeight}
-                    width={chartWidth}
-                    type="line"
-                    data={{
-                        labels: [],
-                        datasets: [
                             {
                                 label: "Temperature",
-                                backgroundColor: "rgba(255,99,132,0.2)",
-                                borderColor: "rgba(255,99,132,1)",
-                                pointBackgroundColor: "rgba(255,99,132,1)",
-                                pointBorderColor: "#fff",
+                                backgroundColor: "transparent",
+                                borderColor: "transparent",
+                                pointBackgroundColor: "transparent",
+                                pointBorderColor: "transparent",
+                                yAxisID: "y-temperature",
+                                data: [],
+                            },
+                            {
+                                label: "Strength",
+                                backgroundColor: "transparent",
+                                borderColor: "transparent",
+                                pointBackgroundColor: "transparent",
+                                pointBorderColor: "transparent",
+                                yAxisID: "y-strength",
                                 data: [],
                             },
                         ],
@@ -94,7 +80,6 @@ const DistanceToolPage = () => {
         <div className="d-flex flex-row flex-grow-1">
             <div className="distance-charts d-flex flex-column flex-grow-1 justify-content-between">
                 <DistanceChartCard />
-                <TemperatureChartCard />
             </div>
             <div className="distance-tool-controls d-flex flex-column flex-grow-1 ms-5">
                 <DistanceToolControls />

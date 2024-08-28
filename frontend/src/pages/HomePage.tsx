@@ -174,10 +174,11 @@ const ConnectedSensorsInformation = () => {
 
 const HomePage = () => {
     return (
-        <div className="home-page">
-            <h2>New Home Page</h2>
-            <AvailablePorts key={1} />
-            <ConnectedSensorsInformation key={2} />
+        <div className="home-page d-flex flex-column">
+                <AvailablePorts key={1} />
+            <div className="mt-3">
+                <ConnectedSensorsInformation key={2} />
+            </div>
         </div>
     );
 };
