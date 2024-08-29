@@ -3,7 +3,7 @@ import { DistanceProfile } from "../components/Types";
 import axios from "axios";
 
 interface DistanceProfileContextType {
-    knownProfiles: DistanceProfile[];
+    knownProfiles: readonly DistanceProfile[];
     selectedProfile: DistanceProfile | undefined;
     setSelectedProfile: (profile: DistanceProfile | undefined) => void;
     triggerFetchProfiles: () => void;

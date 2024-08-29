@@ -1,33 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import { Port, SelectOption, Sensor } from "../components/Types";
-import { CButton, CButtonGroup, CCard, CCardBody, CCardGroup, CCardTitle } from "@coreui/react";
-import ReactSelect, { GroupBase, SingleValue } from "react-select";
+import { Port, Sensor } from "../components/Types";
+import { CButton, CButtonGroup, CCard, CCardBody, CCardTitle, CFormSelect } from "@coreui/react";
+import { PortsProvider, usePorts } from "../contexts/AvailablePortsContext";
 
 const AvailablePorts = () => {
-    const [availablePorts, setAvailablePorts] = useState<readonly Port[]>([]);
-    const [portOptions, setPortOptions] = useState<readonly (SelectOption<Port> | GroupBase<SelectOption<Port>>)[]>([]);
-    const [selectedPort, setSelectedPort] = useState<SingleValue<SelectOption<Port>> | null>(null);
-    const portUpdateTrigger = useWebSocket();
-
-    const fetchAvailablePorts = () => {
-        axios
-            .get("http://127.0.0.1:8000/api/v1/ports/")
-            .then((response) => {
-                const responseData = response.data;
-                // Set the available port objects
-                setAvailablePorts(responseData);
-                // Set the options for the select input
-                const portNames = responseData.map((port: Port) => {
-                    return new SelectOption<Port>(port.name, port);
-                });
-                setPortOptions(portNames);
-            })
-            .catch((error) => {
-                console.error("There was an error fetching the available ports.", error);
-            });
-    };
+    const { availablePorts } = usePorts();
 
     const populateCardGroup = () => {
         // TODO: add port images to the cards
@@ -52,16 +31,34 @@ const AvailablePorts = () => {
         }
     };
 
-    const handlePortChange = (selectedOption: any) => {
-        setSelectedPort(selectedOption);
+    return (
+        <div>
+            <h3>Available Sensors</h3>
+            <div className="d-flex gap-3">{populateCardGroup()}</div>
+            <PortConnectSelection />
+        </div>
+    );
+};
+
+const PortConnectSelection = () => {
+    // Ports context
+    const { availablePorts, selectedPort, setSelectedPort } = usePorts();
+    // States
+    const [portOptions, setPortOptions] = useState<{ label: string; value: string }[]>([]);
+
+    const handlePortChange = (event: any) => {
+        const selectedPortValue = event.target.value;
+        const selectedPort = availablePorts.find((port) => port.name === selectedPortValue);
+        setSelectedPort(selectedPort);
     };
 
     const handleConnectPort = () => {
-        if (selectedPort === null) {
+        if (selectedPort === undefined) {
             console.error("No port selected.");
             return;
         }
-        const postData = selectedPort.value;
+        const postData = selectedPort;
+        console.log(postData);
         axios
             .post("http://127.0.0.1:8000/api/v1/sensors/", postData)
             .then((response) => {
@@ -86,38 +83,30 @@ const AvailablePorts = () => {
         });
     };
 
-    // TODO: implement disconnect all ports
-
     useEffect(() => {
-        fetchAvailablePorts();
-    }, [portUpdateTrigger]);
+        const portNames = availablePorts.map((port: Port) => {
+            return { value: port.name, label: port.name };
+        });
+        setPortOptions(portNames);
+    }, [availablePorts]);
 
     return (
-        <div>
-            <h3>Available sensors</h3>
-            <CCardGroup>{populateCardGroup()}</CCardGroup>
-            <div className="mt-2">
-                <ReactSelect
-                    value={selectedPort}
-                    onChange={handlePortChange}
-                    options={portOptions}
-                    placeholder="Select a port"
-                />
-                <CButtonGroup className="mt-2" role="group">
-                    <CButton color="success" onClick={handleConnectPort}>
-                        Connect Selected Port
-                    </CButton>
-                    <CButton color="warning" onClick={handleConnectAllPorts}>
-                        Connect All
-                    </CButton>
-                    <CButton color="danger">Disconnect All</CButton>
-                </CButtonGroup>
-            </div>
-        </div>
+        <>
+            <CFormSelect id="portSelect" onChange={handlePortChange} label="Select a port" options={portOptions} />
+            <CButtonGroup className="mt-2" role="group">
+                <CButton color="success" onClick={handleConnectPort}>
+                    Connect Selected Port
+                </CButton>
+                <CButton color="warning" onClick={handleConnectAllPorts}>
+                    Connect All
+                </CButton>
+                <CButton color="danger">Disconnect All</CButton>
+            </CButtonGroup>
+        </>
     );
 };
 
-const ConnectedSensorsInformation = () => {
+const KnownSensorsInformation = () => {
     const [knownSensors, setKnownSensors] = useState<Sensor[]>([]);
     const triggerSensorChange = useWebSocket();
 
@@ -136,7 +125,7 @@ const ConnectedSensorsInformation = () => {
         if (knownSensors) {
             return knownSensors.map((sensor: Sensor) => {
                 return (
-                    <CCard key={sensor.id} style={{ width: "18rem" }}>
+                    <CCard key={sensor.id} style={{ width: "18rem" }} className="flex-fill">
                         <CCardBody>
                             <CCardTitle>Sensor {sensor.id}</CCardTitle>
                             <div className="card-text">
@@ -149,7 +138,13 @@ const ConnectedSensorsInformation = () => {
                                 <div>
                                     <b>Hardware ID:</b> {sensor.hwid}
                                 </div>
-                                <div>
+                                <div
+                                    style={{
+                                        backgroundColor: sensor.is_connected ? "green" : "red",
+                                        color: "black",
+                                        borderRadius: "5px",
+                                        padding: "5px",
+                                    }}>
                                     <b>Status:</b> {sensor.is_connected ? "CONNECTED" : "DISCONNECTED"}
                                 </div>
                             </div>
@@ -166,20 +161,24 @@ const ConnectedSensorsInformation = () => {
 
     return (
         <>
-            <h3>Connected sensors</h3>
-            <CCardGroup>{populateCardGroup()}</CCardGroup>
+            <h3>Known Sensors</h3>
+            <div className="d-flex gap-3">{populateCardGroup()}</div>
         </>
     );
 };
 
 const HomePage = () => {
     return (
-        <div className="home-page d-flex flex-column flex-fill">
-                <AvailablePorts key={1} />
-            <div className="mt-3">
-                <ConnectedSensorsInformation key={2} />
+        <PortsProvider>
+            <div className="home-page d-flex flex-column gap-3">
+                <div className="available-sensors">
+                    <AvailablePorts key={1} />
+                </div>
+                <div className="known-sensor">
+                    <KnownSensorsInformation key={2} />
+                </div>
             </div>
-        </div>
+        </PortsProvider>
     );
 };
 
