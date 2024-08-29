@@ -1,24 +1,16 @@
+// Styles imports
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-// Pages
-import HomePage from "./pages/HomePage";
-import DistanceToolPage from "./pages/DistanceToolPage";
+import "@coreui/coreui/dist/css/coreui.min.css";
 // Components
 import { WebSocketProvider } from "./contexts/WebSocketContext";
-import SideBar from "./components/SideBar";
-import ContentField from "./components/ContentField";
+import DefaultLayout from "./layout/DefaultLayout";
+import { BrowserRouter as Router } from "react-router-dom";
 
 function App() {
     return (
         <WebSocketProvider>
             <Router>
-                <SideBar />
-                <ContentField title="Exploration Tool">
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/distance-tool" element={<DistanceToolPage />} />
-                    </Routes>
-                </ContentField>
+                <DefaultLayout />
             </Router>
         </WebSocketProvider>
     );

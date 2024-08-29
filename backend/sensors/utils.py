@@ -1,5 +1,8 @@
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
+from .models import Sensor
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def get_serial_ports() -> list['PortInformation']:
     """
@@ -50,3 +53,22 @@ class PortInformation:
     
     def __repr__(self):
         return str(self)
+    
+def notify_on_port_change():
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        'sensor_updates',
+        {
+            'type': 'notify_of_port_change',
+            'message': 'There has been a change in the available ports.'
+        }
+    )
+    return 'Notifying of port change...'
+
+def refresh_sensor_status(connected_ports: list[str]):
+    sensors = Sensor.objects.all()
+    for sensor in sensors:
+        if sensor.is_connected and sensor.port_name not in connected_ports:
+            sensor.is_connected = False
+            sensor.save()
+    return 'Updating sensor status...'

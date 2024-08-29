@@ -1,136 +1,168 @@
-import "../css/distancetoolpage.css";
-import axios from "axios";
-import { useState, useEffect } from "react";
-import { Sensor } from "../components/Types";
+import DistanceToolControls from "../components/DistanceToolControls";
+import { useEffect, useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import { LineChart, ResponsiveContainer, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { CCard, CCardBody } from "@coreui/react";
+import { Line } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    TimeScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    ChartOptions,
+    ChartData,
+    CategoryScale,
+} from "chart.js";
+import "chartjs-adapter-date-fns";
 
-//TODO: import and use cardStrip when you make it work :)
-// interface ConnectedSensorCardProps {
-//     cardData: Sensor;
-//     startDistanceMeasurement: (sensorId: number) => void;
-//     stopDistanceMeasurement: (sensorId: number) => void;
-// }
+ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, CategoryScale);
 
-// const ConnectedSensorCard: React.FC<ConnectedSensorCardProps> = ({
-//     cardData,
-//     startDistanceMeasurement,
-//     stopDistanceMeasurement,
-// }) => {
-//     return (
-//         <div className="connected-sensor-card">
-//             <h3>Sensor {cardData.id}</h3>
-//             <p>
-//                 <b>COM Port:</b> {cardData.port_name}
-//             </p>
-//             <button onClick={() => startDistanceMeasurement(cardData.id)}>Start</button>
-//             <button onClick={() => stopDistanceMeasurement(cardData.id)}>Stop</button>
-//         </div>
-//     );
-// };
+const chartHeight = 130;
+const chartWidth = 200;
 
-const AvailableMeasuringSensors = () => {
-    const [connectedSensors, setConnectedSensors] = useState<Sensor[]>([]);
-    const { sensorUpdateTrigger } = useWebSocket();
+type DistanceDataPoint = {
+    x: string;
+    y: number;
+    temperature: number;
+    strength: number;
+};
 
-    const fetchConnectedSensors = () => {
-        axios
-            .get("http://127.0.0.1:8000/api/v1/sensors/connected/")
-            .then((response) => {
-                console.log(response.data);
-                setConnectedSensors(response.data);
-            })
-            .catch((error) => {
-                console.error("There was an error fetching the connected sensors.", error);
-            });
-    };
+const DistanceChartCard = () => {
+    const { distanceDataQueue } = useWebSocket();
+    const [chartData, setChartData] = useState<ChartData<"line", DistanceDataPoint[]>>({
+        labels: [],
+        datasets: [
+            {
+                label: "Sensor 1",
+                data: [] as DistanceDataPoint[],
+                borderColor: "rgba(255,99,132,1)",
+                backgroundColor: "rgba(255,99,132,0.2)",
+                yAxisID: "y-distance",
+                xAxisID: "x-time",
+            },
+            {
+                label: "Sensor 2",
+                data: [] as DistanceDataPoint[],
+                borderColor: "rgba(0,123,255,1)",
+                backgroundColor: "rgba(0,123,255,0.2)",
+                yAxisID: "y-distance",
+                xAxisID: "x-time",
+            },
+        ],
+    });
 
-    const startDistanceMeasurement = (sensorId: number) => {
-        axios
-            .post(`http://127.0.0.1:8000/api/v1/measurements/distance/${sensorId}/start`)
-            .then((response) => {
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.error("There was an error starting the distance measurement.", error);
-            });
-    };
-
-    const stopDistanceMeasurement = (sensorId: number) => {
-        axios
-            .post(`http://127.0.0.1:8000/api/v1/measurements/distance/${sensorId}/stop`)
-            .then((response) => {
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.error("There was an error stopping the distance measurement.", error);
-            });
+    const chartOptions: ChartOptions<"line"> = {
+        plugins: {
+            legend: {
+                display: true,
+                position: "top",
+                labels: {
+                    font: {
+                        size: 16,
+                    },
+                },
+            },
+            title: {
+                display: true,
+                text: "Distance Measurements",
+                font: {
+                    size: 20,
+                },
+            },
+            tooltip: {
+                titleFont: {
+                    size: 16,
+                },
+                bodyFont: {
+                    size: 16,
+                },
+                callbacks: {
+                    label: (context) => {
+                        const dataPoint = context.raw as DistanceDataPoint;
+                        return [
+                            `Distance: ${Math.ceil(dataPoint.y * 1000) / 1000} m`,
+                            `Temperature: ${dataPoint.temperature} °C`,
+                            `Strength: ${Math.ceil(dataPoint.strength * 1000) / 1000}`,
+                        ];
+                    },
+                },
+            },
+        },
+        scales: {
+            "x-time": {
+                position: "bottom",
+                title: { display: true, text: "Time (TimeStamp)", font: { size: 16 } },
+                ticks: {
+                    font: {
+                        size: 12,
+                    },
+                },
+            },
+            "y-distance": {
+                position: "left",
+                title: { display: true, text: "Distance (m)", font: { size: 16 } },
+                ticks: {
+                    font: {
+                        size: 14,
+                    },
+                },
+            },
+        },
     };
 
     useEffect(() => {
-        fetchConnectedSensors();
-    }, [sensorUpdateTrigger]);
+        // Data
+        const sensor1Data = distanceDataQueue.filter((packet) => packet.sensor.id === 1);
+        const sensor2Data = distanceDataQueue.filter((packet) => packet.sensor.id === 2);
+
+        // Labels
+        const labels = sensor1Data.map((packet) => packet.data.timestamp);
+
+        // Data from sensor 1
+        const sensorOnePoint = sensor1Data.map((packet) => ({
+            x: packet.data.timestamp,
+            y: packet.data.distances.value,
+            temperature: packet.data.temperature,
+            strength: packet.data.strengths.values[0],
+        }));
+        const sensorTwoPoint = sensor2Data.map((packet) => ({
+            x: packet.data.timestamp,
+            y: packet.data.distances.value,
+            temperature: packet.data.temperature,
+            strength: packet.data.strengths.values[0],
+        }));
+
+        // Update chart data
+        setChartData({
+            labels: labels,
+            datasets: [
+                { ...chartData.datasets[0], data: sensorOnePoint },
+                { ...chartData.datasets[1], data: sensorTwoPoint },
+            ],
+        });
+    }, [distanceDataQueue]);
 
     return (
-        <div className="available-measuring-sensors">
-            <ol>
-                {connectedSensors.map((sensor) => {
-                    return (
-                        <li key={sensor.id}>
-                            <h3>Sensor {sensor.id}</h3>
-                            <p>
-                                <b>COM Port:</b> {sensor.port_name}
-                            </p>
-                            <button onClick={() => startDistanceMeasurement(sensor.id)}>Start</button>
-                            <button onClick={() => stopDistanceMeasurement(sensor.id)}>Stop</button>
-                        </li>
-                    );
-                })}
-            </ol>
-        </div>
-    );
-};
-
-// TODO: show the distance measurements in a graph
-// TODO: show strength of signal in a graph
-//! All data must be processed on the backend, frontend just displays the data
-const ShowDistanceMeasurements = () => {
-    const { distanceDataQueue } = useWebSocket();
-
-    return (
-        <div className="show-distance-measurements">
-            <p>Distance Graph</p>
-            <ResponsiveContainer width="100%" height="90%">
-                <LineChart
-                    width={500}
-                    height={200}
-                    data={distanceDataQueue}
-                    margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="timestamp" />
-                    <YAxis domain={[25, 40]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="temperature" stroke="black" activeDot={{ r: 8 }} />
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
+        <CCard className="flex-fill">
+            <CCardBody>
+                <Line height={chartHeight} width={chartWidth} data={chartData} options={chartOptions} />
+            </CCardBody>
+        </CCard>
     );
 };
 
 const DistanceToolPage = () => {
     return (
-        <div className="distance-tool-page">
-            <h2>Distance Tool</h2>
-            <h3>Sensors Available to Measure Distance</h3>
-            <AvailableMeasuringSensors />
-            <h3>Temperature Graph</h3>
-            <ShowDistanceMeasurements />
+        <div className="distance-tool-page d-flex flex-row flex-fill gap-3">
+            <div className="distance-tool-charts d-flex flex-grow-1">
+                <DistanceChartCard />
+            </div>
+            <div className="distance-tool-controls d-flex flex-column flex-grow-1">
+                <DistanceToolControls />
+            </div>
         </div>
     );
 };

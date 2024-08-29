@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -87,12 +88,17 @@ class DistanceProfileListCreateAPIView(APIView):
     
     def post(self, request):
         serializer = DistanceProfileSerializer(data=request.data)
-        if serializer.is_valid():
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
             serializer.save()
             return Response(data={
                 'message': f'New profile with id {serializer.data['id']} created',
                 'profile': serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response(data={
+                'message': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
     
 class DistanceProfileDetailAPIView(APIView):
     def get(self, request, pk):
@@ -130,6 +136,7 @@ class DistanceMeasurementStartAPIView(APIView):
     def _get_distance_profile(self, requested_distance_profile_id: int) -> DistanceProfile:
         try:
             distance_profile = DistanceProfile.objects.get(pk=requested_distance_profile_id)
+            print(f'Using distance profile with id {requested_distance_profile_id}.')
             return distance_profile
         except DistanceProfile.DoesNotExist:
             print(f'Distance profile with id {requested_distance_profile_id} not found. Using default profile.')
