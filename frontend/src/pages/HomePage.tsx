@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useWebSocket } from "../contexts/WebSocketContext";
 import { Port, Sensor } from "../components/Types";
 import { CButton, CButtonGroup, CCard, CCardBody, CCardTitle, CFormSelect } from "@coreui/react";
-import { PortsProvider, usePorts } from "../contexts/AvailablePortsContext";
+import { HomeResourceProvider, useHomeResource } from "../contexts/HomeResourceContext";
 
 const AvailablePorts = () => {
-    const { availablePorts } = usePorts();
+    const { availablePorts } = useHomeResource();
 
     const populateCardGroup = () => {
         // TODO: add port images to the cards
@@ -42,7 +41,7 @@ const AvailablePorts = () => {
 
 const PortConnectSelection = () => {
     // Ports context
-    const { availablePorts, selectedPort, setSelectedPort } = usePorts();
+    const { availablePorts, selectedPort, setSelectedPort, knownSensors } = useHomeResource();
     // States
     const [portOptions, setPortOptions] = useState<{ label: string; value: string }[]>([]);
 
@@ -83,11 +82,34 @@ const PortConnectSelection = () => {
         });
     };
 
+    const handleDisconnectAllPorts = () => {
+        knownSensors.forEach((sensor) => {
+            if (!sensor.is_connected) {
+                return;
+            }
+            const putData = {
+                port_name: sensor.port_name,
+                port_description: sensor.port_description,
+                hwid: sensor.hwid,
+                is_connected: false,
+            };
+            axios
+                .put(`http://127.0.0.1:8000/api/v1/sensors/${sensor.id}`, putData)
+                .then((response) => {
+                    console.log("Port update response: ", response.data);
+                })
+                .catch((error) => {
+                    console.error("There was an error updating the port.", error);
+                });
+        });
+    };
+
     useEffect(() => {
         const portNames = availablePorts.map((port: Port) => {
             return { value: port.name, label: port.name };
         });
         setPortOptions(portNames);
+        setSelectedPort(availablePorts[0]);
     }, [availablePorts]);
 
     return (
@@ -100,26 +122,16 @@ const PortConnectSelection = () => {
                 <CButton color="warning" onClick={handleConnectAllPorts}>
                     Connect All
                 </CButton>
-                <CButton color="danger">Disconnect All</CButton>
+                <CButton color="danger" onClick={handleDisconnectAllPorts}>
+                    Disconnect All
+                </CButton>
             </CButtonGroup>
         </>
     );
 };
 
 const KnownSensorsInformation = () => {
-    const [knownSensors, setKnownSensors] = useState<Sensor[]>([]);
-    const triggerSensorChange = useWebSocket();
-
-    const fetchKnownSensors = () => {
-        axios
-            .get("http://127.0.0.1:8000/api/v1/sensors/")
-            .then((response) => {
-                setKnownSensors(response.data);
-            })
-            .catch((error) => {
-                console.error("There was an error fetching the available sensors.", error);
-            });
-    };
+    const { knownSensors } = useHomeResource();
 
     const populateCardGroup = () => {
         if (knownSensors) {
@@ -155,10 +167,6 @@ const KnownSensorsInformation = () => {
         }
     };
 
-    useEffect(() => {
-        fetchKnownSensors();
-    }, [triggerSensorChange]);
-
     return (
         <>
             <h3>Known Sensors</h3>
@@ -169,7 +177,7 @@ const KnownSensorsInformation = () => {
 
 const HomePage = () => {
     return (
-        <PortsProvider>
+        <HomeResourceProvider>
             <div className="home-page d-flex flex-column gap-3">
                 <div className="available-sensors">
                     <AvailablePorts key={1} />
@@ -178,7 +186,7 @@ const HomePage = () => {
                     <KnownSensorsInformation key={2} />
                 </div>
             </div>
-        </PortsProvider>
+        </HomeResourceProvider>
     );
 };
 

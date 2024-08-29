@@ -2,9 +2,6 @@ from celery import shared_task
 from sensors.utils import get_serial_ports, filter_ports, refresh_sensor_status, notify_on_port_change
 from django.core.cache import cache
 import json
-from .models import Sensor
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 REDIS_KEY = 'previous_port_names'
 
