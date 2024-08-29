@@ -123,6 +123,8 @@ class SensorClientManager(SensorAppProvider):
             None
         """
         if sensor in self._sensor_client_instances.keys():
+            sensor_client = self._sensor_client_instances[sensor]
+            sensor_client.client.close()
             del self._sensor_client_instances[sensor]
             print(f'Removed sensor instance for port name: {sensor.port_name}')
             print(f'Updated sensor instances: {self._sensor_client_instances}')

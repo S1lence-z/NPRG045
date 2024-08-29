@@ -136,6 +136,7 @@ class DistanceMeasurementStartAPIView(APIView):
     def _get_distance_profile(self, requested_distance_profile_id: int) -> DistanceProfile:
         try:
             distance_profile = DistanceProfile.objects.get(pk=requested_distance_profile_id)
+            print(f'Using distance profile with id {requested_distance_profile_id}.')
             return distance_profile
         except DistanceProfile.DoesNotExist:
             print(f'Distance profile with id {requested_distance_profile_id} not found. Using default profile.')
