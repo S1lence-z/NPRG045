@@ -22,13 +22,22 @@ export class SelectOption<T = any> {
     }
 }
 
+export interface DistanceDataPacket {
+    type: string;
+    message: string;
+    sensor: Sensor;
+    data: DistanceData;
+}
+
 export interface DistanceData {
     timestamp: string;
     distances: {
         value: number;
         limits: number[];
     };
-    strengths: number[];
+    strengths: {
+        values: number[];
+    };
     temperature: number;
 }
 
@@ -37,7 +46,7 @@ export interface WebSocketContextType {
     status: boolean;
     portUpdateTrigger: number;
     sensorUpdateTrigger: number;
-    distanceDataQueue: DistanceData[];
+    distanceDataQueue: DistanceDataPacket[];
 }
 
 export enum MessageType {
@@ -61,11 +70,11 @@ export interface NavigationGroups {
 }
 
 interface FuncAddDataToQueue {
-    (data: DistanceData): void;
+    (data: DistanceDataPacket): void;
 }
 
 export interface CustomDataQueue {
-    (initialValue: []): [DistanceData[], FuncAddDataToQueue];
+    (initialValue: []): [DistanceDataPacket[], FuncAddDataToQueue];
 }
 
 export interface DistanceProfile {

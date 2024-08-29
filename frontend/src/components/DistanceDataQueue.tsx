@@ -1,15 +1,15 @@
 import { useRef, useState } from "react";
-import { CustomDataQueue, DistanceData } from "./Types";
+import { CustomDataQueue, DistanceDataPacket } from "./Types";
 
 const maxDisplayDataAmount = 100; //* maximum amount of data to display
 const graphUpdateInterval = 30; //* in milliseconds
 
 const useDistanceDataQueue: CustomDataQueue = (initialValue: []) => {
-    const [historyData, setHistoryData] = useState<DistanceData[]>(initialValue);
-    const [queue, setQueue] = useState<DistanceData[]>(initialValue);
+    const [historyData, setHistoryData] = useState<DistanceDataPacket[]>(initialValue);
+    const [queue, setQueue] = useState<DistanceDataPacket[]>(initialValue);
     const lastUpdateTime = useRef(Date.now());
 
-    const addDataToQueue = (data: DistanceData) => {
+    const addDataToQueue = (data: DistanceDataPacket) => {
         const currentTime = Date.now();
         setHistoryData((prev) => {
             const updatedHistory = [...prev, data];
@@ -19,7 +19,6 @@ const useDistanceDataQueue: CustomDataQueue = (initialValue: []) => {
             }
             return updatedHistory;
         });
-
         return historyData;
     };
 
@@ -27,7 +26,7 @@ const useDistanceDataQueue: CustomDataQueue = (initialValue: []) => {
         return nowTime - lastUpdateTime > graphUpdateInterval;
     };
 
-    const updateGraph = (updatedHistory: DistanceData[]) => {
+    const updateGraph = (updatedHistory: DistanceDataPacket[]) => {
         setQueue(updatedHistory.slice(-maxDisplayDataAmount));
     };
 

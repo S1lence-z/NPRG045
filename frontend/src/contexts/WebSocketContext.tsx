@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, ReactNode, useContext } from "react";
-import { MessageType, WebSocketContextType } from "../components/Types";
+import { DistanceDataPacket, MessageType, WebSocketContextType } from "../components/Types";
 import useDistanceDataQueue from "../components/DistanceDataQueue";
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -39,7 +39,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                     break;
                 case MessageType.DISTANCE_DATA:
                     console.log("Distance data received and queued");
-                    const packetData = JSON.parse(event.data).data;
+                    const packetData: DistanceDataPacket = JSON.parse(event.data);
                     addDataToQueue(packetData);
                     break;
                 default:

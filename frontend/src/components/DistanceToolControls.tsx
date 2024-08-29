@@ -120,6 +120,10 @@ const DistanceProfileSelection = () => {
         if (!selectedProfile) {
             return;
         }
+        const userResponse = confirm(`Do you really want to delete ${selectedProfile.name}?`);
+        if (!userResponse) {
+            return;
+        }
         const profileId = selectedProfile.id;
         axios
             .delete(`http://127.0.0.1:8000/api/v1/profiles/distance/${profileId}`)
@@ -326,7 +330,7 @@ const DistanceProfileDetails = () => {
 const DistanceToolControls = () => {
     return (
         <DistanceProfileProvider>
-            <div style={{ width: "370px" }} className="d-flex flex-column justify-content-evenly">
+            <div className="d-flex flex-column flex-fill justify-content-evenly">
                 <h5>Controls</h5>
                 <SensorSelection />
                 <div className="mt-2">

@@ -174,7 +174,7 @@ const ConnectedSensorsInformation = () => {
 
 const HomePage = () => {
     return (
-        <div className="home-page d-flex flex-column">
+        <div className="home-page d-flex flex-column flex-fill">
                 <AvailablePorts key={1} />
             <div className="mt-3">
                 <ConnectedSensorsInformation key={2} />
