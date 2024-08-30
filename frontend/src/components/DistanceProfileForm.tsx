@@ -69,8 +69,6 @@ const reflectorShapeOptions = [
 ];
 
 const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistanceProfile }) => {
-    const feedbackValidMessage = "Looks good!";
-    const feedbackInvalidMessage = "Please provide a valid input.";
     const [formData, setFormData] = useState<DistanceProfile | undefined>(undefined);
     const [validated, setValidated] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -147,8 +145,6 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="text"
                         id="name"
-                        feedbackValid={feedbackValidMessage}
-                        feedbackInvalid={feedbackInvalidMessage}
                         onChange={handleElementChange}
                         value={formData?.name}
                         label="Name"
@@ -161,14 +157,14 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                 <CCol>
                     <CFormInput
                         type="number"
-                        step={0.1}
+                        step={0.01}
                         id="start_m"
                         value={formData?.start_m}
                         onChange={handleElementChange}
-                        feedbackValid={feedbackValidMessage}
-                        feedbackInvalid={feedbackInvalidMessage}
                         label="Range Start"
                         placeholder="Enter range start"
+                        min={0.1}
+                        max={5}
                     />
                 </CCol>
                 <CCol>
@@ -178,8 +174,6 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         id="end_m"
                         value={formData?.end_m}
                         onChange={handleElementChange}
-                        feedbackValid={feedbackValidMessage}
-                        feedbackInvalid={feedbackInvalidMessage}
                         label="Range End"
                         placeholder="Enter range end"
                     />
@@ -190,8 +184,6 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         id="max_step_length"
                         onChange={handleElementChange}
                         value={formData?.max_step_length}
-                        feedbackValid={feedbackValidMessage}
-                        feedbackInvalid={feedbackInvalidMessage}
                         label="Max Step Length"
                         placeholder="Enter max step length"
                     />
@@ -222,8 +214,6 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         id="signal_quality"
                         value={formData?.signal_quality}
                         onChange={handleElementChange}
-                        feedbackValid={feedbackValidMessage}
-                        feedbackInvalid={feedbackInvalidMessage}
                         label="Signal Quality"
                         placeholder="Enter signal quality"
                     />
