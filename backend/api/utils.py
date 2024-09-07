@@ -1,7 +1,7 @@
 ###* Utility functions
-from api.serializers import SensorSerializer
+from sensors.serializers import SensorSerializer
 from sensors.models import Sensor
-from sensors.sensor_management.sensor_client_manager import SensorClientManager
+from sensors.managers.sensor_client_manager import SensorClientManager
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 

@@ -1,7 +1,8 @@
 from acconeer.exptool.a121.algo.distance import Detector
 from abc import ABC, abstractmethod
-from sensors.sensor_apps.distance_detector_app import DistanceDetectorApp
-from sensors.models import Sensor, DistanceProfile
+from distance_detector_app.distance_detector_app import DistanceDetectorApp
+from sensors.models import Sensor
+from distance_detector_app.models import DistanceProfile
 from .sensor_client import SensorClient
 
 class SensorAppProvider(ABC):

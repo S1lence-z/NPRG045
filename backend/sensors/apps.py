@@ -5,7 +5,7 @@ class SensorsConfig(AppConfig):
     name = 'sensors'
         
     def _instantiate_sensor_client_manager(self):
-        from .sensor_management.sensor_client_manager import SensorClientManager
+        from sensors.managers.sensor_client_manager import SensorClientManager
         SensorClientManager.get_instance()
         print('SensorClientManager singleton created')
 

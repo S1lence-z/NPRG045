@@ -1,11 +1,12 @@
 import threading
-from api.serializers import SensorSerializer
-from sensors.data_conversion.distance_convertor import DistanceResultConvertor
-from sensors.models import DistanceProfile, Sensor
-from sensors.sensor_management.sensor_client import SensorClient
-from sensors.sensor_apps.sensor_app import SensorApplication
+from distance_detector_app.models import DistanceProfile
+from distance_detector_app.distance_result_convertor import DistanceResultConvertor
+from sensors.models import Sensor
+from sensors.managers.sensor_client import SensorClient
+from sensors.managers.sensor_app_abc import SensorApplication
+from sensors.serializers import SensorSerializer
 from acconeer.exptool import a121
-from acconeer.exptool.a121.algo.distance import Detector, DetectorConfig, ThresholdMethod, DetectorResult
+from acconeer.exptool.a121.algo.distance import Detector, DetectorConfig, ThresholdMethod
 from acconeer.exptool.a121.algo import PeakSortingMethod, ReflectorShape
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -13,6 +14,8 @@ from asgiref.sync import async_to_sync
 class DistanceDetectorApp(SensorApplication):
     _instance: 'DistanceDetectorApp' = None
     _distance_detector_instances: dict[SensorClient, Detector] = {}
+    _detector_threads: dict[Sensor, threading.Thread] = {}
+    _stop_events: dict[Sensor, threading.Event] = {}
     
     def __init__(self):
         raise RuntimeError('Use get_instance() to get the singleton instance.')
@@ -92,10 +95,6 @@ class DistanceDetectorApp(SensorApplication):
     
     def get_distance_detector(self, sensor_client: SensorClient) -> Detector:
         return self._distance_detector_instances.get(sensor_client)
-    
-    #! Methods to start and stop the distance detector
-    _detector_threads: dict[Sensor, threading.Thread] = {}
-    _stop_events: dict[Sensor, threading.Event] = {}
     
     def start(self, sensor_client: SensorClient, distance_profile: DistanceProfile) -> Detector:
         def _run_distance_detector(distance_detector: Detector):
