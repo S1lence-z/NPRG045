@@ -14,8 +14,9 @@ from asgiref.sync import async_to_sync
 class DistanceDetectorApp(SensorApplication):
     _instance: 'DistanceDetectorApp' = None
     _distance_detector_instances: dict[SensorClient, Detector] = {}
-    _detector_threads: dict[Sensor, threading.Thread] = {}
-    _stop_events: dict[Sensor, threading.Event] = {}
+    _detector_threads: dict[SensorClient, threading.Thread] = {}
+    _stop_events: dict[SensorClient, threading.Event] = {}
+    _result_convertor: DistanceResultConvertor = DistanceResultConvertor.get_instance()
     
     def __init__(self):
         raise RuntimeError('Use get_instance() to get the singleton instance.')
@@ -27,9 +28,18 @@ class DistanceDetectorApp(SensorApplication):
             cls._instance = cls.__new__(cls)
         return cls._instance
     
-    def __del__(self):
-        # TODO: Implement this method
-        pass
+    def __del__(self) -> None:
+        # Stop all distance detectors and threads
+        for sensor, stop_event in self._stop_events.items():
+            stop_event.set()
+            self._detector_threads[sensor].join(1)
+            del self._detector_threads[sensor]
+            del self._stop_events[sensor]
+        
+        #? Should the sensor client be used for something?
+        for sensor_client, distance_detector in self._distance_detector_instances.items():
+            distance_detector.stop()
+        self._distance_detector_instances.clear()
     
     def __str__(self) -> str:
         return f'DistanceDetectorApp(sensor_detector_instances={self._distance_detector_instances})'
@@ -97,44 +107,41 @@ class DistanceDetectorApp(SensorApplication):
         return self._distance_detector_instances.get(sensor_client)
     
     def start(self, sensor_client: SensorClient, distance_profile: DistanceProfile) -> Detector:
+        def _create_distance_detector(sensor_client: SensorClient, sensor_ids: list[int], distance_profile: DistanceProfile) -> Detector:
+            distance_detector_instance = Detector(client=sensor_client.client, sensor_ids=sensor_ids, detector_config=distance_profile)
+            distance_detector_instance.calibrate_detector()
+            return distance_detector_instance
+        
         def _run_distance_detector(distance_detector: Detector):
             distance_detector.start()
-            result_convertor = DistanceResultConvertor.get_instance()
             while not stop_event.is_set():
                 data = distance_detector.get_next()
                 if data is not None:
-                    converted_data = result_convertor.convert_to_graph_data(data)
+                    converted_data = self._result_convertor.convert_to_graph_data(data)
                     self._send_distance_data_to_frontend(sensor_client.sensor, converted_data)
+            distance_detector.stop()
         
         SENSOR_IDS = [1]
         distance_profile = self._convert_to_detector_config(distance_profile)
-        distance_detector = Detector(
-            client=sensor_client.client,
-            sensor_ids=SENSOR_IDS,
-            detector_config=distance_profile
-        )
-        distance_detector.calibrate_detector()
+        distance_detector = _create_distance_detector(sensor_client, SENSOR_IDS, distance_profile)
         self._distance_detector_instances[sensor_client] = distance_detector
         
         # Start the distance detector in a separate thread
-        #! Instantiate and save stop event
         stop_event = threading.Event()
-        self._stop_events[sensor_client.sensor] = stop_event
-        #! Instantiate, save and start detector thread
+        self._stop_events[sensor_client] = stop_event
         detector_thread = threading.Thread(target=_run_distance_detector, args=(distance_detector,))
-        self._detector_threads[sensor_client.sensor] = detector_thread
+        self._detector_threads[sensor_client] = detector_thread
         detector_thread.start()
         
     def stop(self, sensor_client: SensorClient):
         distance_detector = self._distance_detector_instances.get(sensor_client)
         
-        if sensor_client.sensor in self._stop_events:
-            self._stop_events[sensor_client.sensor].set()
-            self._detector_threads[sensor_client.sensor].join(1)
-            del self._detector_threads[sensor_client.sensor]
-            del self._stop_events[sensor_client.sensor]
+        if sensor_client in self._stop_events:
+            self._stop_events[sensor_client].set()
+            self._detector_threads[sensor_client].join(1)
+            del self._detector_threads[sensor_client]
+            del self._stop_events[sensor_client]
             
         if distance_detector:
-            distance_detector.stop()
             del self._distance_detector_instances[sensor_client]
             print(f'Stopped distance detector for sensor: {sensor_client.sensor}')
