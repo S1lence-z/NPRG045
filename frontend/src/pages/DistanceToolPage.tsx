@@ -1,7 +1,7 @@
 import DistanceToolControls from "../components/DistanceToolControls";
 import { useEffect, useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import { CCard, CCardBody } from "@coreui/react";
+import { CButton, CCard, CCardBody, CFormSwitch, CHeader } from "@coreui/react";
 import { Line } from "react-chartjs-2";
 import {
     Chart as ChartJS,
@@ -17,39 +17,57 @@ import {
     CategoryScale,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
+import zoomPlugin from "chartjs-plugin-zoom";
+import { DistanceDataPacket, DistanceDataPoint } from "../components/Types";
 
-ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, CategoryScale);
+ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, CategoryScale, zoomPlugin);
 
-const chartHeight = 130;
-const chartWidth = 200;
+const DistanceChartCard = ({ chartHeight, chartWidth }: { chartHeight: number; chartWidth: number }) => {
+    const { distanceDataQueue, setDistanceDataQueue, historyData, setHistoryData } = useWebSocket();
+    // TODO: update sensor ids dynamically
+    const firstSensorId = 11;
+    const secondSensorId = 12;
 
-type DistanceDataPoint = {
-    x: string;
-    y: number;
-    temperature: number;
-    strength: number;
-};
-
-const DistanceChartCard = () => {
-    const { distanceDataQueue } = useWebSocket();
     const [chartData, setChartData] = useState<ChartData<"line", DistanceDataPoint[]>>({
         labels: [],
         datasets: [
             {
-                label: "Sensor 1",
+                label: "Sensor " + firstSensorId.toString(),
                 data: [] as DistanceDataPoint[],
                 borderColor: "rgba(255,99,132,1)",
                 backgroundColor: "rgba(255,99,132,0.2)",
                 yAxisID: "y-distance",
                 xAxisID: "x-time",
+                pointRadius: (context) => {
+                    if (context.raw === undefined) {
+                        return 1;
+                    }
+                    const dataPoint = context.raw as DistanceDataPoint;
+                    if (dataPoint.strength === undefined) {
+                        return 1;
+                    }
+                    const strength = dataPoint.strength;
+                    return Math.abs(strength);
+                },
             },
             {
-                label: "Sensor 2",
+                label: "Sensor " + secondSensorId.toString(),
                 data: [] as DistanceDataPoint[],
                 borderColor: "rgba(0,123,255,1)",
                 backgroundColor: "rgba(0,123,255,0.2)",
                 yAxisID: "y-distance",
                 xAxisID: "x-time",
+                pointRadius: (context) => {
+                    if (context.raw === undefined) {
+                        return 1;
+                    }
+                    const dataPoint = context.raw as DistanceDataPoint;
+                    if (dataPoint.strength === undefined) {
+                        return 1;
+                    }
+                    const strength = dataPoint.strength;
+                    return Math.abs(strength);
+                },
             },
         ],
     });
@@ -90,11 +108,26 @@ const DistanceChartCard = () => {
                     },
                 },
             },
+            zoom: {
+                zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    pinch: {
+                        enabled: true,
+                    },
+                    mode: "x",
+                },
+                pan: {
+                    enabled: true,
+                    mode: "x",
+                },
+            },
         },
         scales: {
             "x-time": {
                 position: "bottom",
-                title: { display: true, text: "Time (TimeStamp)", font: { size: 16 } },
+                title: { display: true, text: "Time (timestamp)", font: { size: 16 } },
                 ticks: {
                     font: {
                         size: 12,
@@ -113,22 +146,57 @@ const DistanceChartCard = () => {
         },
     };
 
+    const updateChart = (dataToShow: DistanceDataPacket[]) => {
+        setChartData({
+            labels: dataToShow.map((packet) => packet.data.timestamp),
+            datasets: [
+                {
+                    ...chartData.datasets[0],
+                    data: dataToShow
+                        .filter((packet) => packet.sensor.id === firstSensorId)
+                        .map((packet) => ({
+                            x: packet.data.timestamp,
+                            y: packet.data.distances.value,
+                            temperature: packet.data.temperature,
+                            strength: packet.data.strengths.values[0],
+                        })),
+                },
+                {
+                    ...chartData.datasets[1],
+                    data: dataToShow
+                        .filter((packet) => packet.sensor.id === secondSensorId)
+                        .map((packet) => ({
+                            x: packet.data.timestamp,
+                            y: packet.data.distances.value,
+                            temperature: packet.data.temperature,
+                            strength: packet.data.strengths.values[0],
+                        })),
+                },
+            ],
+        });
+    };
+
     useEffect(() => {
         // Data
-        const sensor1Data = distanceDataQueue.filter((packet) => packet.sensor.id === 1);
-        const sensor2Data = distanceDataQueue.filter((packet) => packet.sensor.id === 2);
+        const sensor1Packets = distanceDataQueue.filter((packet) => packet.sensor.id === firstSensorId);
+        const sensor2Packets = distanceDataQueue.filter((packet) => packet.sensor.id === secondSensorId);
 
         // Labels
-        const labels = sensor1Data.map((packet) => packet.data.timestamp);
+        let labels = sensor1Packets.map((packet) => packet.data.timestamp);
+        if (sensor1Packets.length === 0) {
+            labels = sensor2Packets.map((packet) => packet.data.timestamp);
+        }
 
         // Data from sensor 1
-        const sensorOnePoint = sensor1Data.map((packet) => ({
+        const sensor1Data = sensor1Packets.map((packet) => ({
             x: packet.data.timestamp,
             y: packet.data.distances.value,
             temperature: packet.data.temperature,
             strength: packet.data.strengths.values[0],
         }));
-        const sensorTwoPoint = sensor2Data.map((packet) => ({
+
+        // Data from sensor 2
+        const sensor2Data = sensor2Packets.map((packet) => ({
             x: packet.data.timestamp,
             y: packet.data.distances.value,
             temperature: packet.data.temperature,
@@ -139,16 +207,42 @@ const DistanceChartCard = () => {
         setChartData({
             labels: labels,
             datasets: [
-                { ...chartData.datasets[0], data: sensorOnePoint },
-                { ...chartData.datasets[1], data: sensorTwoPoint },
+                { ...chartData.datasets[0], data: sensor1Data },
+                { ...chartData.datasets[1], data: sensor2Data },
             ],
         });
     }, [distanceDataQueue]);
 
+    const handleShowWholeSessionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const showWholeSession = event.target.checked;
+        if (showWholeSession) {
+            updateChart(historyData);
+        } else {
+            updateChart(distanceDataQueue);
+        }
+    };
+
+    const handleClearButtonClick = () => {
+        setDistanceDataQueue([]);
+        setHistoryData([]);
+    };
+
     return (
         <CCard className="flex-fill">
+            <CHeader>
+                <CFormSwitch
+                    label="Show Session History"
+                    id="show-chart-history"
+                    onChange={handleShowWholeSessionChange}
+                />
+                <CButton color="primary" className="p-1 fs-10" onClick={handleClearButtonClick}>
+                    Clear
+                </CButton>
+            </CHeader>
             <CCardBody>
-                <Line height={chartHeight} width={chartWidth} data={chartData} options={chartOptions} />
+                <div className="chart-wrapper">
+                    <Line height={chartHeight} width={chartWidth} data={chartData} options={chartOptions} />
+                </div>
             </CCardBody>
         </CCard>
     );
@@ -156,11 +250,11 @@ const DistanceChartCard = () => {
 
 const DistanceToolPage = () => {
     return (
-        <div className="distance-tool-page d-flex flex-row flex-fill gap-3">
+        <div className="distance-tool-page d-flex flex-row flex-fill gap-3 px-5">
             <div className="distance-tool-charts d-flex flex-grow-1">
-                <DistanceChartCard />
+                <DistanceChartCard chartHeight={100} chartWidth={250} />
             </div>
-            <div className="distance-tool-controls d-flex flex-column flex-grow-1">
+            <div className="distance-tool-controls d-flex flex-column flex-fill">
                 <DistanceToolControls />
             </div>
         </div>

@@ -65,7 +65,8 @@ const SensorSelection = () => {
     }, [sensorUpdateTrigger]);
 
     return (
-        <>
+        <div>
+            <h5>Controls</h5>
             <CCard>
                 <CCardHeader>Connected Sensors: {connectedSensors.length}</CCardHeader>
             </CCard>
@@ -93,7 +94,7 @@ const SensorSelection = () => {
                     Stop
                 </CButton>
             </div>
-        </>
+        </div>
     );
 };
 
@@ -151,6 +152,7 @@ const DistanceProfileSelection = () => {
 
     return (
         <>
+            <h5>Distance Profile</h5>
             <CFormSelect options={[...profileOptions]} onChange={handleProfileChange} value={selectedProfile?.name} />
             <div className="profile-list d-flex justify-content-evenly align-items-center mt-2">
                 <CButton
@@ -330,12 +332,12 @@ const DistanceProfileDetails = () => {
 const DistanceToolControls = () => {
     return (
         <DistanceProfileProvider>
-            <div className="d-flex flex-column flex-fill justify-content-evenly">
-                <h5>Controls</h5>
+            <div className="d-flex flex-column flex-fill justify-space-between">
                 <SensorSelection />
                 <div className="mt-2">
-                    <h5>Distance Profile</h5>
                     <DistanceProfileSelection />
+                </div>
+                <div className="mt-2">
                     <DistanceProfileDetails />
                 </div>
             </div>

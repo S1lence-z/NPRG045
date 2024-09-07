@@ -11,7 +11,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [status, setStatus] = useState<boolean>(false);
     const [portUpdateTrigger, setPortUpdateTrigger] = useState<number>(0);
     const [sensorUpdateTrigger, setSensorUpdateTrigger] = useState<number>(0);
-    const [distanceDataQueue, addDataToQueue] = useDistanceDataQueue([]);
+    const [distanceDataQueue, setDistanceDataQueue, addDataToQueue, historyData, setHistoryData ] = useDistanceDataQueue([]);
 
     useEffect(() => {
         const ws = new WebSocket(backendUrl);
@@ -57,7 +57,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return (
         <WebSocketContext.Provider
-            value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger, distanceDataQueue }}>
+            value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger, distanceDataQueue, historyData, setHistoryData, setDistanceDataQueue }}>
             {children}
         </WebSocketContext.Provider>
     );

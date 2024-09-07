@@ -178,7 +178,7 @@ const KnownSensorsInformation = () => {
 const HomePage = () => {
     return (
         <HomeResourceProvider>
-            <div className="home-page d-flex flex-column gap-3">
+            <div className="home-page d-flex flex-column flex-fill gap-3 px-5">
                 <div className="available-sensors">
                     <AvailablePorts key={1} />
                 </div>

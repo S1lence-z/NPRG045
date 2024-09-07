@@ -47,6 +47,9 @@ export interface WebSocketContextType {
     portUpdateTrigger: number;
     sensorUpdateTrigger: number;
     distanceDataQueue: DistanceDataPacket[];
+    historyData: DistanceDataPacket[];
+    setHistoryData: (data: DistanceDataPacket[]) => void;
+    setDistanceDataQueue: (data: DistanceDataPacket[]) => void;
 }
 
 export enum MessageType {
@@ -74,7 +77,13 @@ interface FuncAddDataToQueue {
 }
 
 export interface CustomDataQueue {
-    (initialValue: []): [DistanceDataPacket[], FuncAddDataToQueue];
+    (initialValue: []): [
+        DistanceDataPacket[],
+        (data: DistanceDataPacket[]) => void,
+        FuncAddDataToQueue,
+        DistanceDataPacket[],
+        (data: DistanceDataPacket[]) => void
+    ];
 }
 
 export interface DistanceProfile {
@@ -94,4 +103,23 @@ export interface DistanceProfile {
     fixed_strength_threshold_value: number;
     threshold_sensitivity: number;
     update_rate: number;
+}
+
+export type DistanceDataPoint = {
+    x: string;
+    y: number;
+    temperature: number;
+    strength: number;
+};
+
+export type AmplitudeDataPacket = {
+    sensorId: number;
+    amplitude: number;
+    temperature: number;
+    timestamp: number;
+};
+
+export type SensorConfig = {
+    id: number;
+    // TODO: after the backend part is implemented
 }

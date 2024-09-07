@@ -19,6 +19,7 @@
         "bootstrap": "^5.3.3",
         "chart.js": "^4.4.4",
         "chartjs-adapter-date-fns": "^3.0.0",
+        "chartjs-plugin-zoom": "^2.0.1",
         "react": "^18.3.1",
         "react-chartjs-2": "^5.2.0",
         "react-dom": "^18.3.1",

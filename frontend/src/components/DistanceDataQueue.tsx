@@ -30,7 +30,7 @@ const useDistanceDataQueue: CustomDataQueue = (initialValue: []) => {
         setQueue(updatedHistory.slice(-maxDisplayDataAmount));
     };
 
-    return [queue, addDataToQueue];
+    return [queue, setQueue, addDataToQueue, historyData, setHistoryData];
 };
 
 export default useDistanceDataQueue;
