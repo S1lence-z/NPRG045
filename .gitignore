@@ -1,5 +1,5 @@
-# Ignore my python virtual environment
-python_env
+# Ignore the virtual environment folder for django backend
+venv/
 
 # Ignore my vscode custom settings folder
 .vscode
