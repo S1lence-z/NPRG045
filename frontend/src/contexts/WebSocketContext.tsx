@@ -1,6 +1,8 @@
 import React, { createContext, useEffect, useState, ReactNode, useContext } from "react";
-import { DistanceDataPacket, MessageType, WebSocketContextType } from "../components/Types";
+import WebSocketMessageType from "../types/WebSocketMessageType";
+import DistanceDataPacket from "../types/DistanceDataPacket";
 import useDistanceDataQueue from "../components/DistanceDataQueue";
+import WebSocketContextType from "../types/WebScoketContextType";
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
@@ -11,7 +13,9 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [status, setStatus] = useState<boolean>(false);
     const [portUpdateTrigger, setPortUpdateTrigger] = useState<number>(0);
     const [sensorUpdateTrigger, setSensorUpdateTrigger] = useState<number>(0);
-    const [distanceDataQueue, setDistanceDataQueue, addDataToQueue, historyData, setHistoryData ] = useDistanceDataQueue([]);
+    const [distanceDataQueue, setDistanceDataQueue, addDataToQueue, historyData, setHistoryData] = useDistanceDataQueue(
+        []
+    );
 
     useEffect(() => {
         const ws = new WebSocket(backendUrl);
@@ -23,21 +27,21 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         };
         ws.onmessage = (event) => {
             switch (JSON.parse(event.data).type) {
-                case MessageType.CONNECTION_ESTABLISHED:
+                case WebSocketMessageType.CONNECTION_ESTABLISHED:
                     console.log("Connection established");
                     break;
-                case MessageType.CONNECTION_CLOSED:
+                case WebSocketMessageType.CONNECTION_CLOSED:
                     console.log("Connection closed");
                     break;
-                case MessageType.PORT_CHANGE:
+                case WebSocketMessageType.PORT_CHANGE:
                     console.log("Port change occured");
                     setPortUpdateTrigger((prev) => prev + 1);
                     break;
-                case MessageType.SENSOR_CHANGE:
+                case WebSocketMessageType.SENSOR_CHANGE:
                     console.log("Sensor change occured");
                     setSensorUpdateTrigger((prev) => prev + 1);
                     break;
-                case MessageType.DISTANCE_DATA:
+                case WebSocketMessageType.DISTANCE_DATA:
                     console.log("Distance data received and queued");
                     const packetData: DistanceDataPacket = JSON.parse(event.data);
                     addDataToQueue(packetData);
@@ -57,7 +61,16 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return (
         <WebSocketContext.Provider
-            value={{ socket, status, portUpdateTrigger, sensorUpdateTrigger, distanceDataQueue, historyData, setHistoryData, setDistanceDataQueue }}>
+            value={{
+                socket,
+                status,
+                portUpdateTrigger,
+                sensorUpdateTrigger,
+                distanceDataQueue,
+                historyData,
+                setHistoryData,
+                setDistanceDataQueue,
+            }}>
             {children}
         </WebSocketContext.Provider>
     );

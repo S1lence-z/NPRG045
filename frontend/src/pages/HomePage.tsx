@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Port, Sensor } from "../components/Types";
+import Port from "../types/Port";
+import Sensor from "../types/Sensor";
 import { CButton, CButtonGroup, CCard, CCardBody, CCardTitle, CFormSelect } from "@coreui/react";
 import { HomeResourceProvider, useHomeResource } from "../contexts/HomeResourceContext";
 

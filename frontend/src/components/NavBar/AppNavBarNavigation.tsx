@@ -1,7 +1,8 @@
 import { CDropdown, CDropdownMenu, CDropdownToggle, CNavbarNav, CNavItem, CNavLink } from "@coreui/react";
 import { NavLink } from "react-router-dom";
-import { AppRoute, NavigationGroups } from "./Types";
-import { DefinedRoutes } from "../Routes";
+import AppRoute from "../../types/AppRoute";
+import NavigationGroups from "../../types/NavigationGroups";
+import { DefinedRoutes } from "../../Routes";
 import { useEffect } from "react";
 
 const createNavItem = (route: AppRoute, hasLink: boolean = false) => {
@@ -55,7 +56,7 @@ const populateNavigation = () => {
                     return (
                         <CDropdown variant="nav-item" key={groupName}>
                             <CDropdownToggle color="secondary">{groupName}</CDropdownToggle>
-                            <CDropdownMenu>{navItems.map((item) => item)}</CDropdownMenu>
+                            <CDropdownMenu className="text-nowrap">{navItems.map((item) => item)}</CDropdownMenu>
                         </CDropdown>
                     );
                 }
@@ -73,9 +74,7 @@ const AppNavBarNavigation = () => {
 
     return (
         <>
-            <CNavbarNav>
-                {renderedItems}
-            </CNavbarNav>
+            <CNavbarNav>{renderedItems}</CNavbarNav>
         </>
     );
 };

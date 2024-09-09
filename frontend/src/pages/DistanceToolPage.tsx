@@ -18,7 +18,9 @@ import {
 } from "chart.js";
 import "chartjs-adapter-date-fns";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { DistanceDataPacket, DistanceDataPoint } from "../components/Types";
+import DistanceDataPoint from "../types/DistanceDataPoint";
+import DistanceDataPacket from "../types/DistanceDataPacket";
+import { DistanceProfileProvider } from "../contexts/DistanceProfileContext";
 
 ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, CategoryScale, zoomPlugin);
 
@@ -250,14 +252,16 @@ const DistanceChartCard = ({ chartHeight, chartWidth }: { chartHeight: number; c
 
 const DistanceToolPage = () => {
     return (
-        <div className="distance-tool-page d-flex flex-row flex-fill gap-3 px-5">
-            <div className="distance-tool-charts d-flex flex-grow-1">
-                <DistanceChartCard chartHeight={100} chartWidth={250} />
+        <DistanceProfileProvider>
+            <div className="distance-tool-page d-flex flex-row flex-fill gap-3 px-5 pt-2">
+                <div className="distance-tool-charts d-flex flex-grow-1">
+                    <DistanceChartCard chartHeight={120} chartWidth={250} />
+                </div>
+                <div className="distance-tool-controls d-flex flex-column flex-fill">
+                    <DistanceToolControls />
+                </div>
             </div>
-            <div className="distance-tool-controls d-flex flex-column flex-fill">
-                <DistanceToolControls />
-            </div>
-        </div>
+        </DistanceProfileProvider>
     );
 };
 

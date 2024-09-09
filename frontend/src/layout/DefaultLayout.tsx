@@ -1,5 +1,5 @@
 import AppContentField from "../components/AppContentField";
-import AppNavBar from "../components/AppNavBar";
+import AppNavBar from "../components/NavBar/AppNavBar";
 
 const DefaultLayout = () => {
     return (

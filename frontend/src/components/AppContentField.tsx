@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { CSpinner } from "@coreui/react";
 import { DefinedRoutes } from "../Routes";
 import { Routes, Route } from "react-router-dom";
-import { AppRoute } from "./Types";
+import AppRoute from "../types/AppRoute";
 
 type ContentFieldProps = {
     children?: React.ReactNode;

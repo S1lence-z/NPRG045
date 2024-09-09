@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { CustomDataQueue, DistanceDataPacket } from "./Types";
+import DistanceDataPacket from "../types/DistanceDataPacket";
+import CustomDataQueue from "../types/CustomDataQueue";
 
 const maxDisplayDataAmount = 100; //* maximum amount of data to display
 const graphUpdateInterval = 30; //* in milliseconds

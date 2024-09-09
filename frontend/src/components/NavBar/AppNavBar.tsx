@@ -1,6 +1,6 @@
 import { CContainer, CNavbar, CNavbarBrand, CNavbarText } from "@coreui/react";
 import AppNavBarNavigation from "./AppNavBarNavigation";
-import { BackendConnectionStatus } from "./ConnectionStatus";
+import { BackendConnectionStatus } from "../BackendConnectionStatus";
 
 const AppNavBar = () => {
     const customFontSize = 20;

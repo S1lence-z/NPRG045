@@ -1,4 +1,4 @@
-import { AppRoute } from "./components/Types";
+import AppRoute from "./types/AppRoute";
 import DistanceToolPage from "./pages/DistanceToolPage";
 import HomePage from "./pages/HomePage";
 import HandmotionToolPage from "./pages/HandmotionToolPage";
