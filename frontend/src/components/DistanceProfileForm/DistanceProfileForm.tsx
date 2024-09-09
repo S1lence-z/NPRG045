@@ -1,7 +1,8 @@
 import { CButton, CCol, CForm, CFormCheck, CFormInput, CFormSelect, CRow } from "@coreui/react";
-import { DistanceProfile } from "./Types";
+import DistanceProfile from "../../types/DistanceProfile";
 import React, { useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
+import { defaultDistanceProfile } from "./defaultDistanceProfile";
+import { fetchCreateDistanceProfile, fetchUpdateDistanceProfile } from "../../hooks/apiHooks";
 
 // Defined options for fields
 const maxProfileOptions = [
@@ -68,8 +69,13 @@ const reflectorShapeOptions = [
     },
 ];
 
-const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistanceProfile }) => {
-    const [formData, setFormData] = useState<DistanceProfile | undefined>(undefined);
+interface DistanceProfileFormProps {
+    configToShow?: DistanceProfile;
+    closeModal: () => void;
+}
+
+const DistanceProfileForm: React.FC<DistanceProfileFormProps> = ({ configToShow, closeModal }) => {
+    const [formData, setFormData] = useState<DistanceProfile>(defaultDistanceProfile);
     const [validated, setValidated] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -83,58 +89,36 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
         setFormData({ ...formData, [id]: checked } as DistanceProfile);
     };
 
-    const handleCreateForm = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) {
-            event.stopPropagation();
-            return;
-        }
-        setValidated(true);
-        axios
-            .post("http://127.0.0.1:8000/api/v1/profiles/distance/", formData)
-            .then((response) => {
-                alert("Success: " + response.data.message);
-            })
-            .catch((error: AxiosError) => {
-                const validationErrorMessage = JSON.stringify(error.response?.data);
-                alert("Error: " + validationErrorMessage);
-            });
+    const handleCreateFormSubmit = async () => {
+        await fetchCreateDistanceProfile(formData);
     };
 
-    const handleEditForm = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) {
-            event.stopPropagation();
-            return;
-        }
-        setValidated(true);
-        axios
-            .put(`http://127.0.0.1:8000/api/v1/profiles/distance/${formData?.id}`, formData)
-            .then((response) => {
-                alert("Success: " + response.data.message);
-            })
-            .catch((error: AxiosError) => {
-                const validationErrorMessage = JSON.stringify(error.response?.data);
-                alert("Error: " + validationErrorMessage);
-            });
+    const handleEditFormSubmit = async () => {
+        await fetchUpdateDistanceProfile(formData.id, formData);
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        console.log(JSON.stringify(formData));
-        if (isEditing) {
-            await handleEditForm(event);
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (form.checkValidity() === false) {
+            event.stopPropagation();
             return;
-        } else {
-            await handleCreateForm(event);
         }
+        setValidated(true);
+        if (isEditing) {
+            await handleEditFormSubmit();
+        } else {
+            await handleCreateFormSubmit();
+        }
+        closeModal();
     };
 
     useEffect(() => {
-        if (distanceProfile) {
-            setFormData(distanceProfile);
+        if (configToShow) {
+            setFormData(configToShow);
             setIsEditing(true);
+        } else {
+            setFormData(defaultDistanceProfile);
         }
     }, []);
 
@@ -146,7 +130,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         type="text"
                         id="name"
                         onChange={handleElementChange}
-                        value={formData?.name}
+                        value={formData.name}
                         label="Name"
                         placeholder="Enter name"
                         required
@@ -159,12 +143,13 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         type="number"
                         step={0.01}
                         id="start_m"
-                        value={formData?.start_m}
+                        value={formData.start_m}
                         onChange={handleElementChange}
                         label="Range Start"
                         placeholder="Enter range start"
                         min={0.1}
                         max={5}
+                        required
                     />
                 </CCol>
                 <CCol>
@@ -172,10 +157,11 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         type="number"
                         step={0.1}
                         id="end_m"
-                        value={formData?.end_m}
+                        value={formData.end_m}
                         onChange={handleElementChange}
                         label="Range End"
                         placeholder="Enter range end"
+                        required
                     />
                 </CCol>
                 <CCol>
@@ -183,7 +169,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         type="number"
                         id="max_step_length"
                         onChange={handleElementChange}
-                        value={formData?.max_step_length}
+                        value={formData.max_step_length}
                         label="Max Step Length"
                         placeholder="Enter max step length"
                     />
@@ -196,13 +182,14 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         onChange={handleElementChange}
                         label="Max Profile"
                         options={[...maxProfileOptions]}
+                        value={formData.max_profile}
                     />
                 </CCol>
                 <CCol>
                     <CFormCheck
                         type="checkbox"
                         id="close_range_leakage_cancellation"
-                        checked={formData?.close_range_leakage_cancellation}
+                        checked={formData.close_range_leakage_cancellation}
                         onChange={handleCheckBoxChange}
                         label="Close Range Leakage Cancel"
                         placeholder="Enter close range leakage cancel"
@@ -212,7 +199,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="number"
                         id="signal_quality"
-                        value={formData?.signal_quality}
+                        value={formData.signal_quality}
                         onChange={handleElementChange}
                         label="Signal Quality"
                         placeholder="Enter signal quality"
@@ -226,6 +213,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         label="Threshold Method"
                         onChange={handleElementChange}
                         options={[...thresholdMethodOptions]}
+                        value={formData.threshold_method}
                     />
                 </CCol>
                 <CCol>
@@ -234,6 +222,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         label="Peaksorting Method"
                         onChange={handleElementChange}
                         options={[...peaksortingMethodOptions]}
+                        value={formData.peaksorting_method}
                     />
                 </CCol>
                 <CCol>
@@ -242,6 +231,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         label="Reflector Shape"
                         onChange={handleElementChange}
                         options={[...reflectorShapeOptions]}
+                        value={formData.reflector_shape}
                     />
                 </CCol>
             </CRow>
@@ -251,7 +241,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                         type="number"
                         id="num_frames_in_recorded_threshold"
                         onChange={handleElementChange}
-                        value={formData?.num_frames_in_recorded_threshold}
+                        value={formData.num_frames_in_recorded_threshold}
                         label="Num Frames"
                         placeholder="Enter num frames"
                     />
@@ -260,7 +250,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="number"
                         id="fixed_threshold_value"
-                        value={formData?.fixed_threshold_value}
+                        value={formData.fixed_threshold_value}
                         onChange={handleElementChange}
                         label="Fixed Threshold"
                         placeholder="Enter fixed threshold"
@@ -270,7 +260,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="number"
                         id="fixed_strength_threshold_value"
-                        value={formData?.fixed_strength_threshold_value}
+                        value={formData.fixed_strength_threshold_value}
                         onChange={handleElementChange}
                         label="Fixed Strength"
                         placeholder="Enter fixed strength"
@@ -282,7 +272,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="number"
                         id="threshold_sensitivity"
-                        value={formData?.threshold_sensitivity}
+                        value={formData.threshold_sensitivity}
                         onChange={handleElementChange}
                         label="Threshold Sensitivity"
                         placeholder="Enter threshold sensitivity"
@@ -292,7 +282,7 @@ const DistanceProfileForm = ({ distanceProfile }: { distanceProfile?: DistancePr
                     <CFormInput
                         type="number"
                         id="update_rate"
-                        value={formData?.update_rate}
+                        value={formData.update_rate}
                         onChange={handleElementChange}
                         label="Update Rate"
                         placeholder="Enter update rate"

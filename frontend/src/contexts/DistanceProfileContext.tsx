@@ -1,11 +1,12 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { DistanceProfile } from "../components/Types";
+import DistanceProfile from "../types/DistanceProfile";
 import axios from "axios";
+import { emptyDistanceProfile } from "../components/DistanceProfileForm/defaultDistanceProfile";
 
 interface DistanceProfileContextType {
-    knownProfiles: readonly DistanceProfile[];
-    selectedProfile: DistanceProfile | undefined;
-    setSelectedProfile: (profile: DistanceProfile | undefined) => void;
+    knownProfiles: DistanceProfile[];
+    selectedProfile: DistanceProfile;
+    setSelectedProfile: (profile: DistanceProfile) => void;
     triggerFetchProfiles: () => void;
 }
 
@@ -13,7 +14,7 @@ const DistanceProfileContext = createContext<DistanceProfileContextType | undefi
 
 export const DistanceProfileProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [knownProfiles, setKnownProfiles] = useState<DistanceProfile[]>([]);
-    const [selectedProfile, setSelectedProfile] = useState<DistanceProfile | undefined>(undefined);
+    const [selectedProfile, setSelectedProfile] = useState<DistanceProfile>(emptyDistanceProfile);
     const [fetchProfilesTrigger, setFetchProfilesTrigger] = useState<number>(0);
 
     const fetchDistanceProfiles = () => {
@@ -31,6 +32,12 @@ export const DistanceProfileProvider: React.FC<{ children: ReactNode }> = ({ chi
     const triggerFetchProfiles = () => {
         setFetchProfilesTrigger((prev) => prev + 1);
     };
+
+    useEffect(() => {
+        if (knownProfiles.length === 0) {
+            setSelectedProfile(emptyDistanceProfile);
+        }
+    }, [knownProfiles]);
 
     useEffect(() => {
         fetchDistanceProfiles();
