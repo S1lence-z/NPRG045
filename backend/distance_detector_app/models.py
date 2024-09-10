@@ -65,8 +65,7 @@ class DistanceProfile(models.Model):
     threshold_sensitivity = models.FloatField(default=DEFAULT_THRESHOLD_SENSITIVITY)
     update_rate = models.FloatField(null=True, blank=True, default=50.0)
     
-    def clean(self) -> None:
-        super().clean()
+    def clean(self) -> None:        
         if self.start_m < 0.1:
             raise ValidationError(f'Cannot start measurements close than 0.1m')
         if self.end_m > 5.0:

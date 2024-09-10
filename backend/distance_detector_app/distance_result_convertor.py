@@ -43,7 +43,7 @@ class DistanceResultConvertor:
             'values': [res for res in result.strengths]
         }
     
-    def convert_to_graph_data(self, detector_result: dict[int, DetectorResult]) -> dict:
+    def convert_to_distance_data(self, detector_result: dict[int, DetectorResult]) -> dict:
         data_packet = {}
         timestamp = datetime.datetime.now().strftime('%H:%M:%S')
         for sensor_id, result in detector_result.items():

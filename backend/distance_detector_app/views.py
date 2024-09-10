@@ -18,6 +18,7 @@ class DistanceProfileListCreateAPIView(APIView):
     
     def post(self, request):
         serializer = DistanceProfileSerializer(data=request.data)
+        print(request.data)
         if not serializer.is_valid():
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
