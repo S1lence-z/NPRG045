@@ -1,9 +1,11 @@
 from acconeer.exptool.a121.algo.distance import Detector
 from abc import ABC, abstractmethod
+from amp_phase_detector_app.amp_phase_detector_app import AmpPhaseDetectorApp
 from distance_detector_app.distance_detector_app import DistanceDetectorApp
 from sensors.models import Sensor
 from distance_detector_app.models import DistanceProfile
 from .sensor_client import SensorClient
+from amp_phase_detector_app.models import SensorConfig
 
 class SensorAppProvider(ABC):
     """
@@ -18,6 +20,14 @@ class SensorAppProvider(ABC):
     
     @abstractmethod
     def stop_distance_detector(self, sensor: Sensor) -> None:
+        pass
+    
+    @abstractmethod
+    def start_amp_phase_detector(self, sensor: Sensor, sensor_config: SensorConfig = None) -> None:
+        pass
+    
+    @abstractmethod
+    def stop_amp_phase_detector(self, sensor: Sensor) -> None:
         pass
 
 class SensorClientManager(SensorAppProvider):
@@ -40,6 +50,7 @@ class SensorClientManager(SensorAppProvider):
     _sensor_client_instances: dict[Sensor, SensorClient] = {}
     #* Sensor Aplications
     _distance_detector_app: 'DistanceDetectorApp' = DistanceDetectorApp.get_instance()
+    _amp_phase_detector_app: 'AmpPhaseDetectorApp' = AmpPhaseDetectorApp.get_instance()
         
     def __init__(self) -> None:
         raise RuntimeError('Use get_instance() to get the singleton instance.')
@@ -163,3 +174,11 @@ class SensorClientManager(SensorAppProvider):
         """
         client_instance = self._get_sensor_client(sensor)
         self._distance_detector_app.stop(client_instance)
+        
+    def start_amp_phase_detector(self, sensor: Sensor, sensor_config: SensorConfig = None):
+        client_instance = self._get_sensor_client(sensor)
+        self._amp_phase_detector_app.start(client_instance, sensor_config)
+        
+    def stop_amp_phase_detector(self, sensor: Sensor):
+        client_instance = self._get_sensor_client(sensor)
+        self._amp_phase_detector_app.stop(client_instance)

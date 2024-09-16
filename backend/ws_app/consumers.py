@@ -9,6 +9,7 @@ class MessageType(Enum):
     PORT_CHANGE = "port_change"
     SENSOR_CHANGE = "sensor_change"
     DISTANCE_DATA = "distance_data"
+    AMP_PHASE_DATA = "amp_phase_data"
 
 class WebSocketConsumer(WebsocketConsumer):
     def connect(self):
@@ -66,6 +67,17 @@ class WebSocketConsumer(WebsocketConsumer):
         event_data = event['data']
         self.send(text_data=json.dumps({
             'type': MessageType.DISTANCE_DATA.value,
+            'message': event_message,
+            'sensor': event_sensor,
+            'data': event_data
+        }))
+    
+    def send_amp_phase_data(self, event):
+        event_message = event['message']
+        event_sensor = event['sensor']
+        event_data = event['data']
+        self.send(text_data=json.dumps({
+            'type': MessageType.AMP_PHASE_DATA.value,
             'message': event_message,
             'sensor': event_sensor,
             'data': event_data
