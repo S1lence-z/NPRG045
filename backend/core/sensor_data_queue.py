@@ -27,11 +27,14 @@ class SensorDataQueue:
     def get_converted_data(self):
         return self._converted_data_queue.get(timeout=self.DEFAULT_TIMEOUT)
     
-    def converted_data_empty(self):
+    @property
+    def is_converted_data_empty(self) -> bool:
         return self._converted_data_queue.empty()
     
-    def raw_data_empty(self):
+    @property
+    def is_raw_data_empty(self) -> bool:
         return self._raw_data_queue.empty()
     
-    def empty(self):
+    @property
+    def is_empty(self) -> bool:
         return self._raw_data_queue.empty() and self._converted_data_queue.empty()

@@ -145,7 +145,7 @@ class DistanceDetectorApp(SensorApplication):
         @staticmethod
         def _send_data_thread(sensor_client: SensorClient, stop_event: threading.Event, main_data_queue: SensorDataQueue):
             """Thread 3: Data sending thread"""
-            while not stop_event.is_set() or not main_data_queue.converted_data_empty():
+            while not stop_event.is_set():
                 try:
                     converted_data = main_data_queue.get_converted_data()
                     self._send_distance_data_to_frontend(sensor_client.sensor, converted_data)
