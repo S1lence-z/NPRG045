@@ -10,7 +10,12 @@ import ConfigDetailsCard from "./ConfigDetailsCard";
 import { distanceProfileDisplayNames } from "./DistanceProfileForm/distanceProfileNameMap";
 
 const DistanceToolControls = () => {
-    const { knownProfiles, selectedProfile, setSelectedProfile, triggerFetchProfiles } = useDistanceProfile();
+    const {
+        knownDistanceProfiles: knownProfiles,
+        selectedProfile,
+        setSelectedProfile,
+        triggerFetchProfiles,
+    } = useDistanceProfile();
 
     const startDistanceMeasurement = (availableSensors: Sensor[]) => {
         const postData = {

@@ -4,7 +4,7 @@ interface FuncAddDataToQueue {
     (data: DistanceDataPacket): void;
 }
 
-interface CustomDataQueue {
+interface DistanceDataQueue {
     (initialValue: []): [
         DistanceDataPacket[],
         (data: DistanceDataPacket[]) => void,
@@ -14,4 +14,4 @@ interface CustomDataQueue {
     ];
 }
 
-export default CustomDataQueue;
+export default DistanceDataQueue;

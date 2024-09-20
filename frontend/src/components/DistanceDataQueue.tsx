@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import DistanceDataPacket from "../types/DistanceDataPacket";
-import CustomDataQueue from "../types/CustomDataQueue";
+import DistanceDataQueue from "../types/DistanceDataQueue";
 
 const maxDisplayDataAmount = 100; //* maximum amount of data to display
 const graphUpdateInterval = 30; //* in milliseconds
 
-const useDistanceDataQueue: CustomDataQueue = (initialValue: []) => {
+const useDistanceDataQueue: DistanceDataQueue = (initialValue: DistanceDataPacket[]) => {
     const [historyData, setHistoryData] = useState<DistanceDataPacket[]>(initialValue);
     const [queue, setQueue] = useState<DistanceDataPacket[]>(initialValue);
     const lastUpdateTime = useRef(Date.now());
