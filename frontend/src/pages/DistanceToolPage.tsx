@@ -1,5 +1,5 @@
 import DistanceToolControls from "../components/DistanceToolControls";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { CButton, CCard, CCardBody, CFormSwitch, CHeader } from "@coreui/react";
 import { Line } from "react-chartjs-2";
@@ -229,10 +229,10 @@ const DistanceChartCard = ({ chartHeight, chartWidth }: { chartHeight: number; c
         }
     };
 
-    const handleClearButtonClick = () => {
+    const handleClearButtonClick = useCallback(() => {
         setDistanceDataQueue([]);
         setHistoryData([]);
-    };
+    }, []);
 
     return (
         <CCard className="flex-fill">
