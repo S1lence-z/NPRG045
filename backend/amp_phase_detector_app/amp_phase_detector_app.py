@@ -91,7 +91,7 @@ class AmpPhaseDetectorApp(SensorApplication):
     def start(self, sensor_client: SensorClient, sensor_config: SensorConfig) -> AmpPhaseDetector:
         @staticmethod
         def _create_amp_phase_detector(sensor_client: SensorClient, sensor_config: SensorConfig, sensor_ids: list[int]) -> AmpPhaseDetector:
-            amp_phase_detector_instance = AmpPhaseDetector(sensor_client, sensor_config)
+            amp_phase_detector_instance = AmpPhaseDetector(sensor_client, sensor_config, sensor_ids)
             self._amp_phase_detector_instances[sensor_client] = amp_phase_detector_instance
             return amp_phase_detector_instance
         

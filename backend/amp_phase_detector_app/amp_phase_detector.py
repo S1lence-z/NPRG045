@@ -2,10 +2,15 @@ from acconeer.exptool import a121
 from sensors.managers.sensor_client import SensorClient
 
 class AmpPhaseDetector():
-    def __init__(self, sensor_client: SensorClient, sensor_config: a121.SensorConfig):
+    def __init__(self, sensor_client: SensorClient, sensor_config: a121.SensorConfig, sensor_ids: list[int]):
         self._sensor_client: SensorClient = sensor_client
-        self._sensor_config: a121.SensorConfig = sensor_config
-        self._session_config = a121.SessionConfig()     #! DO NOT SET THE SENSOR CONFIG HERE
+        #* DEFAULT SENSOR CONFIG
+        self._sensor_config: a121.SensorConfig = a121.SensorConfig(
+            sweeps_per_frame=32,
+            num_points=40,
+            step_length=8
+        )
+        self._session_config = a121.SessionConfig({sensor_ids[0]: self._sensor_config}, extended=True)
         self._client: a121.Client  = sensor_client.client
         self._metadata: a121.Metadata = self._client.setup_session(self._session_config)
         
@@ -15,11 +20,7 @@ class AmpPhaseDetector():
     def stop(self):
         self._client.stop_session()
         
-    def get_next(self) -> (a121.Result | list[dict[int, a121.Result]]):
-        #! when the extended=True in the session config is set, the result is in the list format
-        #! that is needed when there are multiple sensor configs in the session config
-        #! currently, the session config is set to have only one sensor config
-        # TODO: add the possiblity of adding more sensor configs in the session config
+    def get_next(self) -> (list[dict[int, a121.Result]]):
         return self._client.get_next()
     
     @property

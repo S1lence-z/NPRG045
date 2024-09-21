@@ -16,7 +16,11 @@ class AmpPhaseResultConvertor():
             cls._instance = cls.__new__(cls)
         return cls._instance
     
-    def convert_to_amp_phase_data(self, amp_phase_result: a121.Result | list[dict[int, a121.Result]], config: a121.SensorConfig, metadata: a121.Metadata) -> dict:
+    def convert_to_amp_phase_data(self, amp_phase_result: list[dict[int, a121.Result]], config: a121.SensorConfig, metadata: a121.Metadata) -> dict:
+        # Extract the result from the list
+        amp_phase_result = amp_phase_result[0][1]
+        metadata = metadata[0][1]
+        
         subsweep_result = self._get_amp_phase_data(amp_phase_result)
         distances_result = self._get_distance_data(config, metadata)
         return {
