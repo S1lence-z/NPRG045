@@ -1,10 +1,10 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import DistanceProfile from "../types/DistanceProfile";
-import axios from "axios";
 import { emptyDistanceProfile } from "../components/DistanceProfileForm/defaultDistanceProfile";
+import { fetchDistanceProfiles } from "../hooks/apiHooks";
 
 interface DistanceProfileContextType {
-    knownProfiles: DistanceProfile[];
+    knownDistanceProfiles: DistanceProfile[];
     selectedProfile: DistanceProfile;
     setSelectedProfile: (profile: DistanceProfile) => void;
     triggerFetchProfiles: () => void;
@@ -17,18 +17,6 @@ export const DistanceProfileProvider: React.FC<{ children: ReactNode }> = ({ chi
     const [selectedProfile, setSelectedProfile] = useState<DistanceProfile>(emptyDistanceProfile);
     const [fetchProfilesTrigger, setFetchProfilesTrigger] = useState<number>(0);
 
-    const fetchDistanceProfiles = () => {
-        axios
-            .get("http://127.0.0.1:8000/api/v1/profiles/distance/")
-            .then((response) => {
-                const profiles = response.data;
-                setKnownProfiles(profiles);
-            })
-            .catch((error) => {
-                console.error("There was an error fetching the distance profiles.", error);
-            });
-    };
-
     const triggerFetchProfiles = () => {
         setFetchProfilesTrigger((prev) => prev + 1);
     };
@@ -40,12 +28,16 @@ export const DistanceProfileProvider: React.FC<{ children: ReactNode }> = ({ chi
     }, [knownProfiles]);
 
     useEffect(() => {
-        fetchDistanceProfiles();
+        const fetchProfiles = async () => {
+            const newlyFetchedProfiles = await fetchDistanceProfiles();
+            setKnownProfiles(newlyFetchedProfiles);
+        };
+        fetchProfiles();
     }, [fetchProfilesTrigger]);
 
     return (
         <DistanceProfileContext.Provider
-            value={{ knownProfiles, selectedProfile, setSelectedProfile, triggerFetchProfiles }}>
+            value={{ knownDistanceProfiles: knownProfiles, selectedProfile, setSelectedProfile, triggerFetchProfiles }}>
             {children}
         </DistanceProfileContext.Provider>
     );

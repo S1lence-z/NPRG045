@@ -106,3 +106,27 @@ export const fetchUpdateSensorConfig = async (sensorConfigId: number, sensorConf
             alert("Error: " + validationErrorMessage);
         });
 };
+
+export const fetchDistanceProfiles: () => Promise<DistanceProfile[]> = async () => {
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/v1/profiles/distance/");
+        return response.data;
+    } catch (error) {
+        console.error("There was an error fetching the distance profiles.", error);
+        return [];
+    } finally {
+        console.log("fetchDistanceProfiles completed");
+    }
+};
+
+export const fetchSensorConfigs: () => Promise<SensorConfig[]> = async () => {
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/v1/sensor_configs/");
+        return response.data;
+    } catch (error) {
+        console.error("There was an error fetching the sensor configs.", error);
+        return [];
+    } finally {
+        console.log("fetchSensorConfigs completed");
+    }
+};
