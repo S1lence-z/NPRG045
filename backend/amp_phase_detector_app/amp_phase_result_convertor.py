@@ -1,3 +1,4 @@
+import datetime
 from acconeer.exptool import a121
 from acconeer_result_encoders import A121ResultEncoder
 import numpy as np
@@ -20,11 +21,12 @@ class AmpPhaseResultConvertor():
         # Extract the result from the list
         amp_phase_result = amp_phase_result[0][1]
         metadata = metadata[0][1]
-        
+        timestamp = datetime.datetime.now().strftime('%H:%M:%S')
         subsweep_result = self._get_amp_phase_data(amp_phase_result)
         distances_result = self._get_distance_data(config, metadata)
         return {
-            'subsweep_results': [result.to_dict() for result in subsweep_result],
+            'timestamp': timestamp,
+            'subsweep_results': {str(i): result.to_dict() for i, result in enumerate(subsweep_result)},
             'distances_result': [float(distances) for distances in distances_result.tolist()]
         }
     
