@@ -4,6 +4,7 @@ enum WebSocketMessageType {
     PORT_CHANGE = "port_change",
     SENSOR_CHANGE = "sensor_change",
     DISTANCE_DATA = "distance_data",
+    AMP_PHASE_DATA = "amp_phase_data",
 }
 
 export default WebSocketMessageType;
