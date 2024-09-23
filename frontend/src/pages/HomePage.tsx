@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Port, Sensor } from "../components/Types";
+import Port from "../types/Port";
+import Sensor from "../types/Sensor";
 import { CButton, CButtonGroup, CCard, CCardBody, CCardTitle, CFormSelect } from "@coreui/react";
 import { HomeResourceProvider, useHomeResource } from "../contexts/HomeResourceContext";
 
@@ -178,7 +179,7 @@ const KnownSensorsInformation = () => {
 const HomePage = () => {
     return (
         <HomeResourceProvider>
-            <div className="home-page d-flex flex-column gap-3">
+            <div className="home-page d-flex flex-column flex-fill gap-3 px-5">
                 <div className="available-sensors">
                     <AvailablePorts key={1} />
                 </div>

@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
-import { CContainer, CSpinner } from "@coreui/react";
+import { CSpinner } from "@coreui/react";
 import { DefinedRoutes } from "../Routes";
 import { Routes, Route } from "react-router-dom";
-import { AppRoute } from "./Types";
+import AppRoute from "../types/AppRoute";
 
 type ContentFieldProps = {
     children?: React.ReactNode;
@@ -10,7 +10,7 @@ type ContentFieldProps = {
 
 const AppContentField: React.FC<ContentFieldProps> = () => {
     return (
-        <CContainer>
+        <div className="d-flex flex-grow-1">
             <Suspense fallback={<CSpinner color="primary" />}>
                 <Routes>
                     {DefinedRoutes.map((route: AppRoute) => {
@@ -18,7 +18,7 @@ const AppContentField: React.FC<ContentFieldProps> = () => {
                     })}
                 </Routes>
             </Suspense>
-        </CContainer>
+        </div>
     );
 };
 

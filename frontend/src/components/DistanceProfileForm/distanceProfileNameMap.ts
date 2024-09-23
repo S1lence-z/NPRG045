@@ -1,0 +1,18 @@
+export const distanceProfileDisplayNames: { [key: string]: string } = {
+    id: "ID",
+    name: "Name",
+    start_m: "Start (m)",
+    end_m: "End (m)",
+    max_step_length: "Max Step Length",
+    max_profile: "Max Profile",
+    close_range_leakage_cancellation: "Close Range Leakage Cancellation",
+    signal_quality: "Signal Quality",
+    threshold_method: "Threshold Method",
+    peaksorting_method: "Peak Sorting Method",
+    reflector_shape: "Reflector Shape",
+    num_frames_in_recorded_threshold: "Num Frames in Recorded Threshold",
+    fixed_threshold_value: "Fixed Threshold Value",
+    fixed_strength_threshold_value: "Fixed Strength Threshold Value",
+    threshold_sensitivity: "Threshold Sensitivity",
+    update_rate: "Update Rate",
+};

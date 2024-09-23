@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'sensors',
     'corsheaders',
     'django_celery_beat',
+    'distance_detector_app',
+    'ports',
+    'amp_phase_detector_app',
     
     'django.contrib.admin',
     'django.contrib.auth',

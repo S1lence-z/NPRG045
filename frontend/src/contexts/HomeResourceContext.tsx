@@ -1,5 +1,6 @@
 import axios from "axios";
-import { Port, Sensor } from "../components/Types";
+import Port from "../types/Port";
+import Sensor from "../types/Sensor";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useWebSocket } from "./WebSocketContext";
 
