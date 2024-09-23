@@ -24,6 +24,10 @@ import { DistanceProfileProvider } from "../contexts/DistanceProfileContext";
 
 ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, CategoryScale, zoomPlugin);
 
+// TODO: update sensor ids dynamically
+const firstSensorId = 11;
+const secondSensorId = 12;
+
 const DistanceChartCard = ({ chartHeight, chartWidth }: { chartHeight: number; chartWidth: number }) => {
     const {
         distanceDataQueue,
@@ -31,9 +35,6 @@ const DistanceChartCard = ({ chartHeight, chartWidth }: { chartHeight: number; c
         distanceHistoryData: historyData,
         setDistanceHistoryData: setHistoryData,
     } = useWebSocket();
-    // TODO: update sensor ids dynamically
-    const firstSensorId = 11;
-    const secondSensorId = 12;
 
     const [chartData, setChartData] = useState<ChartData<"line", DistanceDataPoint[]>>({
         labels: [],
