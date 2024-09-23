@@ -18,7 +18,7 @@ const ConnectedSensorsStatus = ({ onStart, onStop }: { onStart: StartStopFunc; o
         <>
             <h5>Controls</h5>
             <CCard>
-                <CCardHeader id="sensor-state-card-header">Connected sensor {connectedSensors.length}</CCardHeader>
+                <CCardHeader id="sensor-state-card-header">Connected sensors: {connectedSensors.length}</CCardHeader>
             </CCard>
             <div className="button-list d-flex justify-content-evenly align-items-center mt-2">
                 <CButton type="button" color="success" className="flex-fill" onClick={() => onStart(connectedSensors)}>
