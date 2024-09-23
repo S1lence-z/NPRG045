@@ -1,8 +1,11 @@
 import React, { createContext, useEffect, useState, ReactNode, useContext } from "react";
+import WebSocketContextType from "../types/WebSocketContextType";
 import WebSocketMessageType from "../types/WebSocketMessageType";
 import DistanceDataPacket from "../types/DistanceDataPacket";
 import useDistanceDataQueue from "../components/DistanceDataQueue";
-import WebSocketContextType from "../types/WebScoketContextType";
+import useAmpPhaseDataQueue from "../components/AmpPhaseDataQueue";
+import AmpPhaseDataPacket from "../types/AmpPhaseDataPacket";
+
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
@@ -13,9 +16,11 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const [status, setStatus] = useState<boolean>(false);
     const [portUpdateTrigger, setPortUpdateTrigger] = useState<number>(0);
     const [sensorUpdateTrigger, setSensorUpdateTrigger] = useState<number>(0);
-    const [distanceDataQueue, setDistanceDataQueue, addDataToQueue, historyData, setHistoryData] = useDistanceDataQueue(
-        []
-    );
+    // TODO: do not expose the methods via websocket, instead use the data queue context
+    const [distanceDataQueue, setDistanceDataQueue, addDistanceData, distanceHistoryData, setDistanceHistoryData] =
+        useDistanceDataQueue([]);
+    const { getLastPacketBySensorId, addAmpPhaseData, sensorDataQueues, clearSensorDataQueues, getPacketsBySensorId } =
+        useAmpPhaseDataQueue();
 
     useEffect(() => {
         const ws = new WebSocket(backendUrl);
@@ -44,7 +49,12 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                 case WebSocketMessageType.DISTANCE_DATA:
                     console.log("Distance data received and queued");
                     const packetData: DistanceDataPacket = JSON.parse(event.data);
-                    addDataToQueue(packetData);
+                    addDistanceData(packetData);
+                    break;
+                case WebSocketMessageType.AMP_PHASE_DATA:
+                    console.log("Amplitude and phase data received");
+                    const ampPhaseData: AmpPhaseDataPacket = JSON.parse(event.data);
+                    addAmpPhaseData(ampPhaseData);
                     break;
                 default:
                     console.error("Unknown message type");
@@ -66,10 +76,16 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                 status,
                 portUpdateTrigger,
                 sensorUpdateTrigger,
+                // Distance data queue
                 distanceDataQueue,
-                historyData,
-                setHistoryData,
+                distanceHistoryData,
+                setDistanceHistoryData,
                 setDistanceDataQueue,
+                // AmpPhase data queue
+                getLastPacketBySensorId,
+                sensorDataQueues,
+                clearSensorDataQueues,
+                getPacketsBySensorId,
             }}>
             {children}
         </WebSocketContext.Provider>
