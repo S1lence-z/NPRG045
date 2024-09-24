@@ -2,12 +2,13 @@
 
 ## Cíl projektu
 
-Cílem projektu je vytvořit webovou aplikaci, která bude schopna komunikovat se senzorem připojeným přes COM port. Aplikace umožní uživateli provádět měření (např. vzdálenosti) a logovat výsledky do databáze. Hlavními funkcemi aplikace budou:
+Cílem projektu je vytvořit webovou aplikaci, která bude schopna komunikovat se senzorem připojeným přes COM port. Aplikace umožní uživateli provádět měření (např. vzdálenosti) a vyhodnocovat data. Hlavními funkcemi aplikace budou:
 
 -   Připojení k senzoru přes COM port
 -   Měření vzdálenosti a dalších parametrů
 -   Zobrazení naměřených dat v reálném čase
 -   Nahlížení do historie dat
+-   Neuronová síť pro zpracování dat (v rámci budoucí práce na BP)
 
 ## Použité technologie
 
@@ -15,14 +16,14 @@ Cílem projektu je vytvořit webovou aplikaci, která bude schopna komunikovat s
 
 -   Vite + React
 -   TypeScript
--   Reactstrap
+-   CoreUI React
 
 ### Backend
 
 -   Python
 -   Django
 -   SQLite3 (s možností pozdějšího upgradu na MySQL)
--   Neuronová síť pro zpracování dat (v rámci budoucí práce na BP)
+-   Neural Network for data processing (TBD)
 
 ## Komunikace
 
