@@ -46,7 +46,7 @@ This project aims to develop a web application that communicates with a sensor c
 
 -   **REST API:** For frontend-backend communication.
 -   **PySerial:** For connecting the backend to the sensor via the COM port.
--   **Web Socket:** For bidirectional communication between the backend and the frontend.
+-   **WebSocket:** For bidirectional communication between the backend and the frontend.
 
 Here is an installation guide for your `README.md` based on the terminal setup and settings you provided:
 
@@ -64,7 +64,7 @@ Before you start, ensure you have the following installed on your system:
 -   **Node.js** with **npm** (for the frontend)
 -   **WSL** (for Redis if using Windows Subsystem for Linux)
 
-You can see al the python environment details in the requirements.txt file for the backend and package.json for the frontend.
+You can see al the python environment details in the [requirements.txt](requirements.txt) file for the backend and [package.json](./frontend/package.json) for the frontend.
 
 ### Setup Instructions
 
