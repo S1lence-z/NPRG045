@@ -40,7 +40,6 @@ This project aims to develop a web application that communicates with a sensor c
 -   Python
 -   Django
 -   SQLite3 (upgradeable to MySQL)
--   Neural Network for data processing (TBD)
 
 ### Communication Protocols
 
